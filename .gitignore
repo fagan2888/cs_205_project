@@ -1,0 +1,6 @@
+
+*.hdf5
+
+# exclude some binary files
+test_hdf5/read_hdf5
+
