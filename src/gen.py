@@ -3,7 +3,8 @@ from os import path
 
 def gen_all_snaps(basepath, subbox=None):
     assert isinstance(basepath, str)
-    assert isinstance(subbox, int)
+    if subbox is not None:
+        assert isinstance(subbox, int)
 
     output_path = basepath+'/output'
     if subbox is not None:
@@ -12,7 +13,7 @@ def gen_all_snaps(basepath, subbox=None):
     if subbox is None:
         snap_base = '/snapdir_'
     else:
-        snap_base = '/snapdir_subbox'+str(i)+'_'
+        snap_base = '/snapdir_subbox'+str(subbox)+'_'
 
     i = 0
     imax = int(1E6)
@@ -29,4 +30,14 @@ def gen_all_snaps(basepath, subbox=None):
             break
 
     return np.array(snap_list)
+
+if __name__ == '__main__':
+    from util import basepath_from_sim
+
+    sim = 'TNG300-3'
+    basepath = basepath_from_sim(sim)
+    snap_list = gen_all_snaps(basepath)
+    print(snap_list)
+    snap_list = gen_all_snaps(basepath, subbox=1)
+    print(snap_list) 
 
