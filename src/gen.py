@@ -49,6 +49,39 @@ def gen_all_snaps(basepath, subbox=None, return_files=True):
     else:
         return np.array(snap_list)
 
+def gen_tracer_ids_blackhole(file_list, position, radius):
+    maxmass=0
+    blackhole_ID = -1
+    for fname in file_list:
+        dat = h5.File(fname, mode='r')
+        if 'PartType5' not in dat.keys():
+            continue
+        pos = np.array(dat['PartType5']['Coordinates'])
+        pos = np.subtract(pos, position)
+
+        keys = np.where(np.linalg.norm(pos, axis=1) < radius)[0]
+        if len(keys) > 0:
+            masses = dat['PartType5']['Masses'][keys]
+            subkey = np.argmax(masses)
+
+            if masses[subkey] > maxmass:
+                maxmass = masses[subkey]
+                blackhole_ID = dat['PartType5']['ParticleIDs'][keys[subkey]]
+
+    assert blackhole_ID > 0
+
+    tracer_list = np.array([], dtype=np.uint64)
+    for fname in file_list:
+        dat = h5.File(fname, mode='r')
+        if 'PartType3' not in dat.keys():
+            continue
+        keys = np.where(np.isin(dat['PartType3']['ParentID'], blackhole_ID))[0]
+        print(dat['PartType3']['ParentID'][keys])
+        tracer_list = np.concatenate((tracer_list, dat['PartType3']['TracerID'][keys]))
+
+    return blackhole_ID, tracer_list
+
+
 def gen_ids_of_interest(filepath, position, radius, mode='radius_position', PartType=None):
     assert isinstance(filepath, str)
     assert path.exists(filepath)
