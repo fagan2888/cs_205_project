@@ -81,6 +81,10 @@ def gen_tracer_ids_blackhole(file_list, position, radius):
 
     return blackhole_ID, tracer_list
 
+def gen_position_of_subhalo(subhaloID, subhaloFile):
+    dat = h5.File(subhaloFile, mode='r')
+    key = np.where(np.array(dat['SubhaloIDs']) == subhaloID)[0][0]
+    return dat['SubhaloPos'][key]
 
 def gen_ids_of_interest(filepath, position, radius, mode='radius_position', PartType=None):
     assert isinstance(filepath, str)
