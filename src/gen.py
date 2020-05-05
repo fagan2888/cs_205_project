@@ -75,7 +75,7 @@ def _gen_ids_blackhole(filepath, position, radius):
     
     ptype = 'PartType5'
     if ptype not in dat.keys():
-        return None
+        return []
 
     pos = np.array(dat[ptype]['Coordinates'])
     pos = np.subtract(pos, position)
@@ -87,7 +87,7 @@ def _gen_ids_blackhole(filepath, position, radius):
         print(pos[keys[subkey]], masses[subkey])
         return (dat[ptype]['ParticleIDs'][keys[subkey]], masses[subkey])
     else:
-        return None
+        return []
 
 
 if __name__ == '__main__':
