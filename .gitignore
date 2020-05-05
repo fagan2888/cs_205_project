@@ -4,4 +4,4 @@ __pycache__
 
 # exclude some binary files
 hdf5_test/read_hdf5
-
+*.pyc
