@@ -2,7 +2,7 @@ import numpy as np
 from os import path
 import h5py as h5
 
-def gen_all_snaps(basepath, subbox=None):
+def gen_all_snaps(basepath, subbox=None, return_files=True):
     assert isinstance(basepath, str)
     if subbox is not None:
         assert isinstance(subbox, int)
@@ -13,12 +13,15 @@ def gen_all_snaps(basepath, subbox=None):
 
     if subbox is None:
         snap_base = '/snapdir_'
+        file_base = '/snap_'
     else:
         snap_base = '/snapdir_subbox'+str(subbox)+'_'
+        file_base = '/snap_subbox'+str(subbox)+'_'
 
     i = 0
     imax = int(1E6)
     snap_list = []
+    file_list = []
     while(True):
         if i >= imax:
             raise Exception("are there really more than "+str(imax)+" snapshots?")
@@ -26,11 +29,25 @@ def gen_all_snaps(basepath, subbox=None):
         test_dir = output_path + snap_base + "{:03d}".format(i)
         if(path.exists(test_dir)):
             snap_list.append(i)
+            j=0
+            while(True):
+                if j >= imax:
+                    raise Exception("are there really more than "+str(imax)+" files?")
+                fname = test_dir+file_base+"{:03d}".format(i)+'.'+str(j)+'.hdf5'
+                if(path.exists(fname)):
+                    file_list.append((fname, i))
+                    j+=1
+                else:
+                    break
+
             i+=1
         else:
             break
 
-    return np.array(snap_list)
+    if return_files:
+        return file_list
+    else:
+        return np.array(snap_list)
 
 def gen_ids_of_interest(filepath, position, radius, mode='radius_position', PartType=None):
     assert isinstance(filepath, str)
