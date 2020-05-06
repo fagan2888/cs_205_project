@@ -8,3 +8,4 @@ hdf5_test/read_hdf5
 *.out
 *.err
 *.swp
+src/lbin.so
