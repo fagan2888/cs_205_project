@@ -30,4 +30,4 @@ for cur_node in `cat $NODEFILE`; do
 done
 
 sleep 30
-spark-submit --master $MASTER --deploy-mode client --num-executors 8 generate_gas_data.py 
+spark-submit --master $MASTER --deploy-mode client --num-executors 8 generate_tracer_data.py 
