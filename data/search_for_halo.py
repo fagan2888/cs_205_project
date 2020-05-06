@@ -19,11 +19,11 @@ hlittle=0.6774
 print('center=', center/1000)
 print('boxsize=', boxsize/1000)
 
-fof_list = glob.glob(name + '/fof_subhalo_tab_099.*.hdf5')
+fof_length = len(glob.glob(name + '/fof_subhalo_tab_099.*.hdf5'))
+fof_list = [h5.File(name + '/fof_subhalo_tab_099.'+str(i)+'.hdf5', mode='r') for i in range(fof_length)]
+# fof_first = h5.File(name + '/fof_subhalo_tab_099.0.hdf5', mode='r')
 
-for fname in fof_list:
-    fof = h5.File(fname, mode='r')
-
+for fof in fof_list:
     if 'GroupPos' not in fof['Group'].keys():
         continue
 
@@ -45,4 +45,12 @@ for fname in fof_list:
 
     for k in keys:
         if fof['Group']['Group_M_Mean200'][k]/hlittle > 80:
-            print(fof['Group']['GroupFirstSub'][k], fof['Group']['GroupPos'][k], dist_to_box[k], fof['Group']['Group_M_Mean200'][k]/hlittle, fof['Group']['Group_R_Mean200'][k])
+            subhalo_idx = fof['Group']['GroupFirstSub'][k]
+            for j in range(fof_length):
+                try:
+                    spin = fof['Subhalo']['SubhaloSpin'][subhalo_idx]
+                    test_pos = fof['Subhalo']['SubhaloPos'][subhalo_idx]
+                    break
+                except:
+                    subhalo_idx -= fof_list[j]['Header'].attrs['Nsubgroups_ThisFile']
+            print(spin, fof['Group']['GroupFirstSub'][k], test_pos, fof['Group']['GroupPos'][k], dist_to_box[k], fof['Group']['Group_M_Mean200'][k]/hlittle, fof['Group']['Group_R_Mean200'][k])
