@@ -51,6 +51,8 @@ sc = SparkContext(conf = conf)
 
 sc.addFile(os.getcwd() + '/../src/gen.py')
 
-df = sc.parallelize(files)
-df.flatMap(read_file).saveAsTextFile('s3a://spark-namluu-output/illustrisdata_{0}'.format(timestamp))
+df = sc.parallelize(files).repartition(10)
+df.flatMap(read_file).cache()
+
+df.coalesce(1).saveAsTextFile('s3a://spark-namluu-output/illustrisdata_{0}'.format(timestamp))
 
