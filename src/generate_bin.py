@@ -19,12 +19,14 @@ for snap in range(0,2430):
 
     gas_pos = particles[:,1:4]
     gas_mass = particles[:,4]
+    gas_size = particles[:,5]
 
     tracer_pos = tracers[:,1:4]
     tracer_mass = tracers[:,4]
     tracer_snap = tracers[:,5].astype(int)
-
-    gas_map, tracer_map = output_binned_map(1604, spin, subhalo_pos, gas_pos, gas_mass, tracer_pos, tracer_mass, tracer_snap)
+    tracer_size = tracers[:,6]
+    
+    gas_map, tracer_map = output_binned_map(snap, spin, subhalo_pos, gas_pos, gas_mass, gas_size, tracer_pos, tracer_mass, tracer_snap, tracer_size)
 
     print(np.sum(gas_map), np.sum(tracer_map))
 
