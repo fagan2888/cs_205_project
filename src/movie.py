@@ -30,6 +30,7 @@ def make_movie(data_gas, data_tracer, fout):
 
 	heatmap = data_gas[-1]
 	im_gas = ax.imshow(heatmap.T, origin='lower', norm=mpl.colors.LogNorm())
+    ax.set_facecolor('k')
 
 	vmax = np.max(data_tracer) * 0.9
 	vmin = 0.01 * vmax
