@@ -17,7 +17,7 @@ def animate(frame, im_gas, im_tracer, data_gas, data_tracer, vmin):
 	heatmap = data_tracer[frame]
 	heatmap[heatmap < vmin] = np.nan
 
-	im_tracer.set_data(heatmap.T)
+	# im_tracer.set_data(heatmap.T)
 	
 
 	return (im_gas, im_tracer, data_gas, data_tracer)
@@ -36,7 +36,8 @@ def make_movie(data_gas, data_tracer, fout):
 	vmin = 0.01 * vmax
 
 	heatmap = data_tracer[-1]
-	im_tracer = ax.imshow(heatmap.T, origin='lower', norm=mpl.colors.LogNorm(), alpha=0.9, cmap='Reds')
+	# im_tracer = ax.imshow(heatmap.T, origin='lower', norm=mpl.colors.LogNorm(), alpha=0.9, cmap='Reds')
+	im_tracer = None
 
 	nframes = np.shape(data_gas)[0]
 
