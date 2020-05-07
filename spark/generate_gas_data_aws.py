@@ -56,7 +56,9 @@ def extract_gas_info(filepath, position, radius):
     keys = np.where(np.linalg.norm(pos, axis=1) < radius)[0]
     coordinates = dat[ptype]['Coordinates'][keys]
     masses = np.reshape(dat[ptype]['Masses'][keys], (-1,1))
-    return np.hstack((np.full((masses.shape[0], 1), snapnum), coordinates, masses))
+    volume = dat[ptype]['Masses'][keys] / dat[ptype]['Density'][keys]
+    size = np.power(volume, 1.0/3).reshape(-1,1)
+    return np.hstack((np.full((masses.shape[0], 1), snapnum), coordinates, masses, size))
     
 
 
@@ -65,7 +67,7 @@ def extract_gas_info(filepath, position, radius):
 timestamp = datetime.now().strftime("%m%d_%H%M")
 print("timestamp: " + str(timestamp))
 
-s3 = s3fs.S3FileSystem(key='AKIAQJR434DUQHGP3HWE', secret='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')
+s3 = s3fs.S3FileSystem(key='', secret='')
 files = s3.glob('s3://spark-illustris-tng/tng300-1/subbox1/snapshot-*/*.hdf5')
 print('length: ' + str(len(files)))
 
@@ -91,7 +93,6 @@ def extract_map(filepath):
 
 df = sc.parallelize(files) \
   .repartition(10)         \
-  .flatMap(extract_map)    \
-  .map(lambda x: str(x)[1:-1]) \
+  .flatMap(extract_map)
 
 df.repartition(1).saveAsTextFile('s3a://spark-namluu-output/illustrisdata_{0}'.format(timestamp))

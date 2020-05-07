@@ -11,7 +11,7 @@ import s3fs
 timestamp = datetime.now().strftime("%m%d_%H%M")
 print('timestamp: ' + str(timestamp))
 
-s3 = s3fs.S3FileSystem(key='AKIAQJR434DUQHGP3HWE', secret='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')
+s3 = s3fs.S3FileSystem(key='', secret='')
 files = s3.glob('s3://spark-illustris-tng/tng300-1/subbox1/snapshot-*/*.hdf5')
 
 def gen_tracer_ids_blackhole(file_list, position, radius):

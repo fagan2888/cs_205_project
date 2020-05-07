@@ -2,7 +2,7 @@ import numpy as np
 import s3fs
 
 def get_particles():
-    s3 = s3fs.S3FileSystem(key='AKIAQJR434DUQHGP3HWE', secret='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')
+    s3 = s3fs.S3FileSystem(key='', secret='')
     particles_info_file = s3.open('spark-illustris-tng/particles_info', 'r').readlines()
     particles_info = []
     i = 0

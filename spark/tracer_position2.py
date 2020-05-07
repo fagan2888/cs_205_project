@@ -122,7 +122,7 @@ def get_position(snap, tracerIDs_bc, tracer_snaps_bc):
 
 ### METADATA
 
-s3 = s3fs.S3FileSystem(key='AKIAQJR434DUQHGP3HWE', secret='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')
+s3 = s3fs.S3FileSystem(key='', secret='')
 files = s3.glob('s3://spark-illustris-tng/tng300-1/subbox1/snapshot-*/*.hdf5')
 
 subhalo_lists = h5py.File(s3.open('spark-illustris-tng/subhalo-list/subbox1_99.hdf5', 'rb'), 'r')
