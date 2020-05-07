@@ -3,7 +3,7 @@ from ctypes import *
 so_file = "./lbin.so"
 lbin = CDLL(so_file)
 
-NBINS = 256
+NBINS = 64 
 width = 40.0
 
 class MyArray(Structure):
