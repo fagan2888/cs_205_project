@@ -33,6 +33,28 @@ def basepath_from_sim(sim):
     else:
         raise NotImplementedError('I don\'t recognize sim: '+sim)
 
+def read_dataset(path):
+    s3 = s3fs.S3FileSystem(key='AKIAQJR434DUQHGP3HWE', secret='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')
+    f = s3.open(path, 'r').readlines()
+    ret = []
+    i = 0
+
+    while i < len(f):
+      line = f[i].strip()
+      if line[-1] != ']':
+          line = line + ' ' + f[i+1].strip()
+          i += 1
+      line = line[1:-1]
+      splt = line.split(' ')
+      row = []
+      for val in splt:
+          row.append(float(val))
+      
+      ret.append(row)
+      i += 1
+
+    return np.array(ret)
+
 if __name__ == '__main__':
     assert basepath_from_sim('TNG300-1') == '/n/hernquistfs3/IllustrisTNG/Runs/L205n2500TNG/'
     assert basepath_from_sim('TNG100-1') == '/n/hernquistfs3/IllustrisTNG/Runs/L75n1820TNG/'
