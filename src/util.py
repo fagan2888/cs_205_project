@@ -1,4 +1,5 @@
 import numpy as np
+import s3fs
 
 def basepath_from_sim(sim):
     assert isinstance(sim, str), "sim must be a string"
@@ -35,6 +36,7 @@ def basepath_from_sim(sim):
 
 def read_dataset(path):
     s3 = s3fs.S3FileSystem(key='AKIAQJR434DUQHGP3HWE', secret='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')
+    s3.read_timeout = 3600
     f = s3.open(path, 'r').readlines()
     ret = []
     i = 0

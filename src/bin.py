@@ -1,6 +1,6 @@
 import numpy as np 
 from ctypes import *
-so_file = "lbin.so"
+so_file = "./lbin.so"
 lbin = CDLL(so_file)
 
 NBINS = 256
@@ -10,7 +10,7 @@ class MyArray(Structure):
     _fields_ = [("data", (c_float * NBINS) * NBINS)]
 
 def gen_rot_matrix(vec):
-    if isinstace(vec, list):
+    if isinstance(vec, list):
         vec = np.array(vec)
 
     vec_normed = vec / np.linalg.norm(vec)
@@ -30,7 +30,7 @@ def output_binned_map(snap, spin, subhalo_pos, gas_pos, gas_mass, tracer_pos, tr
     gas_pos = np.subtract(gas_pos, subhalo_pos)
     tracer_pos = np.subtract(tracer_pos, subhalo_pos)
 
-    rot_mat = gen_rot_matrix(spin)
+    rotmat = gen_rot_matrix(spin)
 
     gas_pos    = np.matmul(rotmat, gas_pos.transpose()).transpose()
     tracer_pos = np.matmul(rotmat, tracer_pos.transpose()).transpose()
