@@ -1,4 +1,4 @@
-## Welcome to GitHub Pages
+## TRACKING GALAXIES OVER TIME
 
 You can use the [editor on GitHub](https://github.com/jenliketen/cs_205_project/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
 
