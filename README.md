@@ -12,6 +12,33 @@ For our project, we simulated the behavior of gas particles before they fall int
 
 The need for efficient big data processing becomes obvious as we aim to analyze the evolution of a small region in the universe over a long period of time. Each box usually consists of thousands to hundreds of thousands of galaxies, and each galaxy is resolved with up to tens of thousands resolution elements. Normally, we are only interested in a small region of the simulation, so we need to locate our particles of interest from a huge list and access and store their properties with ease. Additionally, visualization of the galaxies is compute-intensive.
 
+### Methods
+
+To create the simulations from the snapshot files, we processed the snapshots using the Amazon EMR framework and visualized the results taking advantage of CPU and GPU computing on Cannon. Specifically, we took the following steps:
+
+1. Upload snapshot files from Cannon to AWS S3 buckets.
+
+2. Generate a list of snapshot files from which to search for particleIDs of interest. In our case, this consists of all of the snapshots with their complete paths.
+
+3. Generate particleIDs of interest by locating particles within a specified radius <font color='red'>(more physics here?)</font>
+
+- Gas particles
+
+- Blackhole particles
+
+- Tracer particles (we cannot directly track the properties of gas particles, so we assign a unique tracer particle to each gas particle and track these instead)
+
+- Blackhole tracer particles
+
+4. Locate the particleIDs generated in Step 3 in the snapshot files generated in Step 1 using Spark.
+
+5. Access and store the coordinates and masses (if applicable) of the particles for post-processing.
+
+6. Post-process for visualization using OpenMP. <font color='red'>Add more info here.</font>
+
+7. Create movie for simulation.
+
+
 
 ```markdown
 Syntax highlighted code block
