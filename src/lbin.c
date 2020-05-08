@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#define NBINS 256
+#define NBINS 512
 
 typedef struct MyArray {
     float   data[NBINS][NBINS];

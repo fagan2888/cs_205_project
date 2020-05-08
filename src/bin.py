@@ -3,8 +3,8 @@ from ctypes import *
 so_file = "./lbin.so"
 lbin = CDLL(so_file)
 
-NBINS = 256
-width = 40.0
+NBINS = 512
+width = 200.0
 
 class MyArray(Structure):
     _fields_ = [("data", (c_float * NBINS) * NBINS)]
@@ -52,11 +52,17 @@ def output_binned_map(snap, spin, subhalo_pos, gas_pos, gas_mass, gas_size, trac
     lbin.bin_particles_smoothed(xpos.ctypes.data_as(POINTER(c_double)), ypos.ctypes.data_as(POINTER(c_double)), mass.ctypes.data_as(POINTER(c_double)), 
                        size.ctypes.data_as(POINTER(c_double)), c_int(len(mass)), c_double(width), c_int(NBINS), byref(ans_gas))
 
-    keys = np.where(np.logical_and(tracer_snap - snap > 0, tracer_snap - snap < 32))[0]
+    #keys = np.where(np.logical_and(tracer_snap - snap > 0, tracer_snap - snap < 32))[0]
+    keys = np.where(np.abs(tracer_pos[:,2]) < width/2.0)[0]
     xpos = np.array(tracer_pos[:,0][keys])
     ypos = np.array(tracer_pos[:,1][keys])
     mass = np.array(tracer_mass[keys])
     size = size_factor * np.array(tracer_size[keys])
+    #xpos = np.array(tracer_pos[:,0])
+    #ypos = np.array(tracer_pos[:,1])
+    #mass = np.array(tracer_mass)
+    #size = size_factor * np.array(tracer_size)
+    print(size)
     lbin.bin_particles_smoothed(xpos.ctypes.data_as(POINTER(c_double)), ypos.ctypes.data_as(POINTER(c_double)), mass.ctypes.data_as(POINTER(c_double)), 
                        size.ctypes.data_as(POINTER(c_double)), c_int(len(mass)), c_double(width), c_int(NBINS), byref(ans_tracer))
 
