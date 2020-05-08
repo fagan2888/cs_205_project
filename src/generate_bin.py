@@ -3,8 +3,8 @@ from util import *
 from gen import gen_position_of_subhalo
 import numpy as np
 
-tracers_info = read_dataset('../data/s3/tracers_info_full')
-particles_info = read_dataset('../data/s3/particles_info')
+tracers_info = read_dataset('../data/s3/tracers_info_with_size')
+particles_info = read_dataset('../data/s3/particles_info_with_size')
 print('finish loading data')
 
 for snap in range(0,2430):

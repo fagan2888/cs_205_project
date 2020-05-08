@@ -26,7 +26,7 @@ def gen_rot_matrix(vec):
     rot_mat = np.matmul(secondrot, firstrot)
     return rot_mat
 
-def output_binned_map(snap, spin, subhalo_pos, gas_pos, gas_mass, gas_size, tracer_pos, tracer_mass, tracer_size, tracer_snap):
+def output_binned_map(snap, spin, subhalo_pos, gas_pos, gas_mass, gas_size, tracer_pos, tracer_mass, tracer_size, tracer_snap, size_factor=0.45):
     gas_pos = np.subtract(gas_pos, subhalo_pos)
     tracer_pos = np.subtract(tracer_pos, subhalo_pos)
 
@@ -42,18 +42,21 @@ def output_binned_map(snap, spin, subhalo_pos, gas_pos, gas_mass, gas_size, trac
         for j in range(NBINS):
             ans_gas.data[i][j] = 0.0
             ans_tracer.data[i][j] = 0.0
+ 
+    keys = np.where(np.abs(gas_pos[:,2]) < width/2.0)[0]
 
-
-    xpos = np.array(gas_pos[:,0])
-    ypos = np.array(gas_pos[:,1])
-    lbin.bin_particles_smoothed(xpos.ctypes.data_as(POINTER(c_double)), ypos.ctypes.data_as(POINTER(c_double)), gas_mass.ctypes.data_as(POINTER(c_double)), 
-                       gas_size.ctypes.data_as(POINTER(c_double)), c_int(len(gas_mass)), c_double(width), c_int(NBINS), byref(ans_gas))
+    xpos = np.array(gas_pos[:,0][keys])
+    ypos = np.array(gas_pos[:,1][keys])
+    mass = np.array(gas_mass[keys])
+    size = size_factor * np.array(gas_size[keys])
+    lbin.bin_particles_smoothed(xpos.ctypes.data_as(POINTER(c_double)), ypos.ctypes.data_as(POINTER(c_double)), mass.ctypes.data_as(POINTER(c_double)), 
+                       size.ctypes.data_as(POINTER(c_double)), c_int(len(mass)), c_double(width), c_int(NBINS), byref(ans_gas))
 
     keys = np.where(np.logical_and(tracer_snap - snap > 0, tracer_snap - snap < 32))[0]
     xpos = np.array(tracer_pos[:,0][keys])
     ypos = np.array(tracer_pos[:,1][keys])
     mass = np.array(tracer_mass[keys])
-    size = np.array(tracer_size[keys])
+    size = size_factor * np.array(tracer_size[keys])
     lbin.bin_particles_smoothed(xpos.ctypes.data_as(POINTER(c_double)), ypos.ctypes.data_as(POINTER(c_double)), mass.ctypes.data_as(POINTER(c_double)), 
                        size.ctypes.data_as(POINTER(c_double)), c_int(len(mass)), c_double(width), c_int(NBINS), byref(ans_tracer))
 
