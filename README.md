@@ -30,6 +30,7 @@ To create the simulations from the snapshot files, we processed the snapshots us
 
 &nbsp;&nbsp;&nbsp;&nbsp;- Blackhole tracer particles
 
+
 4. Locate the particleIDs generated in Step 3 in the snapshot files generated in Step 1 using Spark.
 
 5. Access and store the coordinates and masses (if applicable) of the particles for post-processing.
