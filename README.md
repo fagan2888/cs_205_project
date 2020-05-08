@@ -22,13 +22,13 @@ To create the simulations from the snapshot files, we processed the snapshots us
 
 3. Generate particleIDs of interest by locating particles within a specified radius <font color='red'>(more physics here?)</font>
 
-&nbsp;&nbsp;&nbsp;&nbsp;- Gas particles
+&nbsp;&nbsp;&nbsp;&nbsp;* Gas particles
 
-&nbsp;&nbsp;&nbsp;&nbsp;- Blackhole particles
+&nbsp;&nbsp;&nbsp;&nbsp;* Blackhole particles
 
-&nbsp;&nbsp;&nbsp;&nbsp;- Tracer particles (we cannot directly track the properties of gas particles, so we assign a unique tracer particle to each gas particle and track these instead)
+&nbsp;&nbsp;&nbsp;&nbsp;* Tracer particles (we cannot directly track the properties of gas particles, so we assign a unique tracer particle to each gas particle and track these instead)
 
-&nbsp;&nbsp;&nbsp;&nbsp;- Blackhole tracer particles
+&nbsp;&nbsp;&nbsp;&nbsp;* Blackhole tracer particles
 
 
 4. Locate the particleIDs generated in Step 3 in the snapshot files generated in Step 1 using Spark.
