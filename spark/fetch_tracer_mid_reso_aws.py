@@ -82,7 +82,7 @@ def get_snapnum(snap, tracer_ids_bc, blackhole_id):
 
 def get_position(snap, tracer_ids_bc, tracer_snaps_bc):
     try:
-        snap_files = s3.glob(snap_tofile(snap)))
+        snap_files = s3.glob(snap_tofile(snap))
 
         tracer_ids = tracer_ids_bc.value
         tracer_snaps = tracer_snaps_bc.value
@@ -104,7 +104,7 @@ def get_position(snap, tracer_ids_bc, tracer_snaps_bc):
         for f in snap_files:
             dat = open_h5(f)
             
-            for i in [0]:
+            for i in [0, 2, 4, 5]:
                 ptype = 'PartType' + str(i)
                 if ptype in dat.keys():
                     for row in tracer_map:
@@ -112,14 +112,18 @@ def get_position(snap, tracer_ids_bc, tracer_snaps_bc):
                         if len(keys) == 1:
                             key = keys[0]
                             coord = dat[ptype]['Coordinates'][key].reshape(-1,3)
-                            mass = dat[ptype]['Masses'][key].reshape(-1,1)
-                            density = dat[ptype]['Masses'][key] / dat[ptype]['Density'][key] 
-                            size = np.power(density, 1.0/3).reshape(-1,1)
+                            # mass = dat[ptype]['Masses'][key].reshape(-1,1)
+                            # density = dat[ptype]['Masses'][key] / dat[ptype]['Density'][key] 
+                            # size = np.power(density, 1.0/3).reshape(-1,1)
+                            mass = np.array([[1]])
+                            density = np.array([[1]])
+                            size = np.array([[1]])
                             tracer_key = np.where(tracer_snaps[:,0] == row[0])[0]
                             tracer_snap = tracer_snaps[:,1][tracer_key].reshape(-1,1)
                             
                             val = np.hstack((np.array([[snap]]), coord, mass, size, tracer_snap))
                             ret = np.vstack((ret, val))
+
                     
         return ret
     except Exception as ex:
@@ -147,6 +151,18 @@ def snap_tofile(snap):
 def extract_snapnum(snap):
     return get_snapnum(snap, tracer_ids_bc, blackhole_id)
 
+def get_subhalo_pos(s3):
+    f = s3.open('spark-illustris-tng/tng100_2_subhalo_pos').readlines()
+    ret = []
+    for row in f:
+        row = row.strip().split(' ')
+        vals = []
+        for val in row:
+            vals.append(float(val))
+        
+        ret.append(vals)
+    return ret
+
 ### METADATA
 
 ACCESS_KEY = os.environ['SPARK_ACCESS_KEY']
@@ -156,12 +172,14 @@ s3 = s3fs.S3FileSystem(key=ACCESS_KEY, secret=SECRET_KEY)
 
 subhalo_id = 89587
 subhalo_positions = get_subhalo_pos(s3)
+print('length subhalo positions')
+print(len(subhalo_positions))
 radius = 140
 
 snaps = range(3000, 4380)
 
 last_snap = snaps[-1]
-lastfiles = s3.glob(snap_tofile(last_snap)
+lastfiles = s3.glob(snap_tofile(last_snap))
 blackhole_id, tracer_ids = gen_tracer_ids_blackhole(lastfiles, subhalo_positions[last_snap], 140)
 
 timestamp = datetime.now().strftime("%m%d_%H%M")
@@ -172,16 +190,17 @@ print(timestamp)
 conf = SparkConf().setAppName('GenerateTracerData')
 sc = SparkContext(conf = conf)
 
+
 """
 To recalculate tracer_snaps, use this, comment out and hard code its value to improve performance
-
-tracer_snaps = sc.parallelize(snaps).parition(10).flatMap(extract_snapnum).reduceByKey(lambda v1, v2: min(v1, v2)).collect()
 """
+tracer_ids_bc = sc.broadcast(tracer_ids)
 
-tracer_snaps = [(200111276192.0, 1811.0), (200095813192.0, 2174.0), (200095751092.0, 2174.0), (200095712792.0, 2174.0), (200095807792.0, 2174.0), (200111342341.0, 1933.0), (200095750441.0, 2174.0), (200111305741.0, 2174.0), (200111277941.0, 1847.0), (200095676441.0, 2174.0), (200095755641.0, 2174.0), (200095785342.0, 2174.0), (200097361842.0, 2174.0), (200095812542.0, 2174.0), (200111522342.0, 2174.0), (200095750491.0, 2174.0)]
+#tracer_snaps = sc.parallelize(snaps).repartition(10).flatMap(extract_snapnum).reduceByKey(lambda v1, v2: min(v1, v2)).collect()
+tracer_snaps = [(200766509441.0, 3885.0), (200765701641.0, 3885.0), (200766489841.0, 3885.0), (200892167541.0, 3000.0), (200766488891.0, 3885.0), (200890415391.0, 3885.0), (200765403392.0, 3885.0), (200765408842.0, 3885.0), (200765686042.0, 3885.0), (200766484242.0, 3885.0)]
 
 tracer_snaps_bc = sc.broadcast(np.array(tracer_snaps))
-tracer_ids_bc = sc.broadcast(tracer_ids)
+
 
 get_position_map = lambda f: get_position(f, tracer_ids_bc, tracer_snaps_bc)
 
