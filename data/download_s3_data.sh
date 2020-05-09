@@ -9,3 +9,4 @@ wget -O particles_info_with_size https://spark-illustris-tng.s3.amazonaws.com/pa
 wget -O tracers_info_with_size https://spark-illustris-tng.s3.amazonaws.com/tracers_info_with_size
 wget -O particles_info_tng100_2 https://spark-illustris-tng.s3.amazonaws.com/particles_info_tng100_2
 wget -O tracers_info_tng100_2 https://spark-illustris-tng.s3.amazonaws.com/tracers_info_tng100_2
+wget -O tng100_2_subhalo_pos https://spark-illustris-tng.s3.amazonaws.com/tng100_2_subhalo_pos
