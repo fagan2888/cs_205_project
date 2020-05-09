@@ -5,8 +5,16 @@ import numpy as np
 from tqdm import tqdm
 
 def init_axes():
-    fig, ax = plt.subplots(1, 1, frameon=False)
-    ax.axis('off')
+    #fig, ax = plt.subplots(1, 1, frameon=False)
+    #ax.axis('off')
+    #fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
+    fig = plt.figure(frameon=False)
+    fig.set_size_inches(6,6)
+    
+    ax = plt.Axes(fig, [0., 0., 1., 1.])
+    ax.set_axis_off()
+    fig.add_axes(ax)
+
     return fig, ax
 
 def animate(frame, im_gas, im_tracer, data_gas, data_tracer, vmin):
@@ -32,8 +40,9 @@ def make_movie(data_gas, data_tracer, fout):
     # ax.set_ylim(-width/2.0, width/2.0)
 
     heatmap = data_gas[-1]
-    im_gas = ax.imshow(heatmap.T, origin='lower', norm=mpl.colors.LogNorm())
+    im_gas = ax.imshow(heatmap.T, origin='lower', norm=mpl.colors.LogNorm(), aspect='auto')
     ax.set_facecolor('k')
+    # 0ax.set_bbox('tight')
 
     vmax = np.max(data_tracer) * 0.9
     vmin = 0.01 * vmax
