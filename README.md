@@ -75,6 +75,10 @@ Specifically, we took the following steps:
 
 The source code for our project can be found [here](../master/src).
 
+### Simulation
+
+
+
 ### Parallel Application
 
 Our application uses a single program, multiple data (SPMD) execution model that distributes tasks and simultaneously runs them on multiple processors and nodes. We took advantage of functional parallelism (task parallelism), decomposing the problem into smaller tasks and assigning these to the processors. We executed our model at the loop level, as the majority of our tasks consists of iterating through large lists of files as well as through lines of individual files.
