@@ -8,7 +8,11 @@ At the center of every galaxy is a supermassive black hole which grows through s
 
 For our project, we followed the behavior of gas particles before they fall into black holes using particle data over time snapshots stored as hdf5 files. In order to do this, we utilized the tracer particles present in the simulation. These tracer particles track the transfer of mass between different particle types (e.g. gas converted into stars or gas converted into black holes). Each tracer is associated with a parent cell (either gas, star, or black hole), but the tracer can change which parent it is associated with between each snapshot according to the underlying physics of the simulation.
 
-For each of the sections (referred to as boxes) we are interested in, we made a movie out of the snapshots containing the positions and masses of the associated particles. The boxes are variable in size, with the largest being 300 Mpc in distance. The smaller boxes - or subboxes - are subsections of the large boxes. The size and number of snapshots also vary across boxes and subboxes, as shown in the table below:
+For each of the sections (referred to as boxes) we are interested in, we made a movie out of the snapshots containing the positions and masses of the associated particles. The boxes are variable in size, with the largest being 300 Mpc in distance. The smaller boxes - or subboxes - are subsections of the large boxes.
+
+<font color='red'>pics for the boxes</font>
+
+The size and number of snapshots also vary across boxes and subboxes, as shown in the table below:
 
 Size | TNG50 | TNG100 | TNG300
 :---: | :---: | :---: | :---:
@@ -23,7 +27,11 @@ The need for efficient big data processing becomes obvious as we aim to analyze 
 
 ### Methods
 
-To create the simulations from the snapshot files, we processed the snapshots using the Amazon EMR framework and visualized the results taking advantage of CPU and GPU computing on Cannon. Specifically, we took the following steps:
+To create the simulations from the snapshot files, we processed the snapshots using the Amazon EMR framework and visualized the results taking advantage of CPU computing on Cannon.
+
+<font color='red'>picture for overall workflow</font>
+
+Specifically, we took the following steps:
 
 1. Upload snapshot files from Cannon to AWS S3 buckets.
 
