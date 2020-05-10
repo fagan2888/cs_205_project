@@ -51,7 +51,7 @@ Here is an example to access the properties of particles:
 
 ![](./images/image4.jpg)
 
-_(Note: not every snapshot contains all of the particle types, and not every particle has all of the properties. As we saw later on, this poses its own challenges.)_
+_(Note: not every snapshot contains all of the particle types, and not every particle has all of the properties.)_
 
 ### Existing Work
 
@@ -117,71 +117,62 @@ The script file can be either `fetch_gas_mid_reso_aws.py` or `fetch_gas_mid_reso
 
 To run on Cannon, load the following modules:
 
-```module load Anaconda3/5.0.1-fasrc02
-
+```
+module load Anaconda3/5.0.1-fasrc02
 module load python/3.6.3-fasrc02
-
-module load ffmpeg/4.0.2-fasrc01```
+module load ffmpeg/4.0.2-fasrc01
+```
 
 ### Replicability Information
 
-Specs of the system	
+Specs of the system:	
 
-	Instance type: AWS m5.xlarge instance
-  
-Model: Intel(R) Xeon(R) Platinum 8175M CPU @ 2.50GHz
-
-	Number of CPUs: 4
-  
-	Number of cores per CPU: 2
-  
-	Clock rate: 2.50 GHz
-  
-Cache memory: 32 K
-
-Main memory: 122 GiB
+* Instance type: AWS m5.xlarge instance
+* Model: Intel(R) Xeon(R) Platinum 8175M CPU @ 2.50GHz
+* Number of CPUs: 4 
+* Number of cores per CPU: 2
+* Clock rate: 2.50 GHz
+* Cache memory: 32 K
+* Main memory: 122 GiB
  							
-Operating system
+Operating system:
 
-	Amazon Linux 2018.03
-  
-Movie making is done on Cannon	
+* Amazon Linux 2018.03
 
-Spark cluster
+Spark cluster:
 
-Number of worker instances: 1, 2, 4
+* Number of worker instances: 1, 2, 4
+* Release label: emr-5.29.0
+* Hadoop distribution: Amazon
+* Applications: Ganglia 3.7.2, Spark 2.4.4, Zeppelin 0.8.2
 
- 	Release label: emr-5.29.0
-  
- 	Hadoop distribution: Amazon
-  
- 	Applications: Ganglia 3.7.2, Spark 2.4.4, Zeppelin 0.8.2 
-  
-Python, version 3.6.6
+Movie making:
+* Cannon
 
-Numpy, version
+Libraries:
 
-H5py, version
-
-OpenMP, version
+* Python, version 3.6.3
+    * Numpy, version
+    * H5py, version
+* OpenMP, version
 
 ### Speedup and Scaling
 
 For TNG100-3:
 
-Collect data serially takes 21 minutes
+* Collecting data serially takes 21 minutes.
+* Collecting data using a cluster of 6 worker nodes take 5.4 minutes.
 
-Collect data using a cluster of 6 worker nodes take 5.4 minutes
+For TNG100-2:
 
-For TNG100-2
+* Collecting data for tracer takes 1 hour 50 minutes
+* <font color='red'>Collecting data for particles takes</font>
 
-Collecting data for tracer takes 1h 50 minutes
+Strong scaling speedup is tested using 20 snapshots.
 
-<font color='red'>Collecting data for particles take</font>
+Weak scaling speedup is tested using 10 to 80 snapshots.
 
-Strong scaling speedup is tested using 20 snapshots
-
-Weak scaling speedup is tested using 10 to 80 snapshots
+Here is a plot demonstrating the relative performance using various modes of scaling:
 
 ![Performance with strong and weak scaling](./images/image5.jpg)
 
@@ -193,22 +184,22 @@ Weak scaling speedup is tested using 10 to 80 snapshots
 
 ### Advanced Data Structures
 
-We used the hdf5 file format, which is highly hierarchical and not simply lines in a file. The hdf5 format works great with our data; however, it poses its own challenges as well (see below).
+We used the `hdf5 file` format, which is highly hierarchical and not simply lines in a file. The `hdf5` format works great with our data; however, it poses its own challenges as well (see below).
 
 ### Challenges
 
-* Queue times made developing Spark job on Cannon take too long, and so we could not implement our framework on the highest resolution run
-* Eventually decided to migrate ~1TB of data to S3 and use EMR
-* HDF5 is not optimal for cloud storage
+* Queue times made developing Spark job on Cannon take too long, and so we could not implement our framework on the highest resolution runs.
+    * We eventually decided to migrate ~1 TB of data to S3 and use EMR.
+* The `hdf5` file format is not optimal for cloud storage.
 * We had originally wanted to output all of the properties of interest at once. However, since not all particle types contain these properties, this existing structure would introduce very complex loops that would make the Spark execution difficult. In the end, our most important properties were simply the coordinates, the masses, and the densities, so we called them separately instead. 
-* For the highest resolution run, the subbox contained a total of 11.2 TB of data, which was too much to upload to S3 (would run through our credits). While the data is on Cannon, we were not able to set up a spark cluster on Cannon due to technical difficulties and long queue times.
+* For the highest resolution run, the subbox contained a total of 11.2 TB of data, which was too much to upload to S3 (would run through our credits). While the data is on Cannon, we were not able to set up a Spark cluster on Cannon due to technical difficulties and long queue times.
 
 ### Closing Remarks
 
-Overall, we achieved our project objectives and make easy-to-understand simulations for galaxy formation. We saw that by using Spark, we were able to process a large amount of data relatively efficiently. Cannon is not optimized for this type of data processing, but future flagship simulations which will have even greater data requirements can possibly use an EMR-like framework to optimize data locality. Additionally, analyzing individual snapshots can probably be performed on a single node using big compute paradigms, but analyzing a large number of snapshots would require big data paradigms.
+Overall, we achieved our project objectives and made easy-to-understand simulations for galaxy formation. We saw that by using Spark, we were able to process a large amount of data relatively efficiently. Cannon is not optimized for this type of data processing, but future flagship simulations which will have even greater data requirements can possibly use an EMR-like framework to optimize data locality. Additionally, analyzing individual snapshots can probably be performed on a single node using big compute paradigms, but analyzing a large number of snapshots would require big data paradigms.
 
 ### Citations
 
-Weinberger, R., Springel, V., Hernquist, L., et al. 2017, MNRAS, 465, 3291
+Weinberger, R., Springel, V., Hernquist, L., _et al_. 2017, MNRAS, 465, 3291.
 
-Pillepich, A., Springel, V., Nelson, D., et al. 2018b, MNRAS, 473, 4077
+Pillepich, A., Springel, V., Nelson, D., _et al_. 2018b, MNRAS, 473, 4077.
