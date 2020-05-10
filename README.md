@@ -44,8 +44,8 @@ _(so a directory with the name `L205n1250TNG` means that the box size is 205 Mpc
 
 Within each box’s directory, the snapshot `hdf5` files are stored in their respective snapshot directories starting with `snapdir`. Each file contains two layers in hierarchical order:
 
-* Layer 1: headers specifying particle types
-* Layer 2: properties of the particles of the same type
+* Layer 1, `PartType<x>`: headers specifying particle types
+* Layer 2, `Properties`: properties of the particles of the same type
 
 Here is an example to access the properties of particles:
 
