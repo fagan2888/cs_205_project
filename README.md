@@ -81,7 +81,7 @@ b. At the final snapshot we identified all tracer particles associated with the 
 
 6. Create movie for simulation using FuncAnimation from matplotlib.
 
-The source code for our project can be found [here](../blob/master/src).
+The source code for our project can be found [here](../master/src).
 
 ### Parallel Application
 
