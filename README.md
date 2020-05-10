@@ -157,7 +157,9 @@ Movie making:
 Libraries:
 
 * Python, version 3.6.3
+
     <font color='red'>* Numpy, version</font>
+    
     <font color='red'>* H5py, version</font>
 <font color='red'>* OpenMP, version</font>
 
