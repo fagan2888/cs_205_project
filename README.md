@@ -84,9 +84,8 @@ Our application uses a single program, multiple data (SPMD) execution model that
 
 Our application uses a hybrid programming model consisting of Spark and OpenMP to address the big data and big compute problems, respectively.
 
-* Spark: the generation, location, and query of our particleIDs of interest is a repetitive process that searches through the files and outputs each particle’s properties we need to create the simulation. The Spark framework partitions the data into RDDs and operates on them in a parallel fashion, writing outputs only when we need them, which greatly reduces storage and runtime.
-
-* OpenMP: to make a movie using the particle properties obtained using Spark, we need to do a significant amount of post-processing of the results. In addition to the binning, we also found that applying a Gaussian smoothing filter to the particle data was necessary in order to make the visualization look nice. We implemented the binning and smoothing function in C and exposed this procedure to python using the ctypes library. This function was applied to each snapshot, which we also parallelized through OpenMP using the pymp library. This procedure was implemented on Cannon.
+* Spark: the generation, location, and query of our `particleID`s of interest is a repetitive process that searches through the files and outputs each particle’s properties we need to create the simulation. The Spark framework partitions the data into RDDs and operates on them in a parallel fashion, writing outputs only when we need them, which greatly reduces storage and runtime.
+* OpenMP: to make a movie using the particle properties obtained using Spark, we need to do a significant amount of post-processing of the results. In addition to the binning, we also found that applying a Gaussian smoothing filter to the particle data was necessary in order to make the visualization look nice. We implemented the binning and smoothing functions in C and exposed this procedure to Python using the `ctypes` library. This function was applied to each snapshot, which we also parallelized through OpenMP using the `pymp` library. This procedure was implemented on Cannon.
 
 ### Platform and Infrastructure
 
@@ -96,38 +95,33 @@ Our application uses a hybrid programming model consisting of Spark and OpenMP t
 
 ### Software Design
 
-We use 3 Spark jobs:
+We used 3 Spark jobs:
 
 * To get the gas information
-
 * To get the tracer last snapshot before they fall into blackhole
-
 * To get tracer information
 
 
 ### Tutorial for Code
 
-To run spark job: 
+To run the Spark jobs, check out the repository at https://github.com/jenliketen/cs_205_project/spark
 
-Check out the repository at https://github.com/jenliketen/cs_205_project
-
-In both files, there is a line snaps = range(0, 4380) that control how many snapshots we want to run. To run on a smaller set of data, modify it to snaps = range(4375, 4380)
+In <font color='red'>both files (?)</font>, there is a line `snaps = range(0, 4380)` that controls how many snapshots we want to run. To run on a smaller set of data, modify it to ```snaps = range(4375, 4380)```.
 
 Now we can either run the job by:
 
-Spinning up an EMR cluster, recommended to use 4-6 core nodes of m5.xlarge instances
+* Spinning up an EMR cluster, recommended to use 4-6 core nodes of m5.xlarge instances
+* `scp` the 2 files to the cluster, and run spark-submit --master yarn --total-executor-cores 10 --conf SPARK_ACCESS_KEY=<your aws access key> --conf SPARK_SECRET_KEY=<your aws secret key> <script-file>
 
-Scp the 2 files to the cluster, and run spark-submit --master yarn --total-executor-cores 10 --conf SPARK_ACCESS_KEY=<your aws access key> --conf SPARK_SECRET_KEY=<your aws secret key> <script-file>
-
-Script file can be either fetch_gas_mid_reso_aws.py or fetch_gas_mid_reso_aws.py
+The script file can be either `fetch_gas_mid_reso_aws.py` or `fetch_gas_mid_reso_aws.py`.
 
 To run on Cannon, load the following modules:
 
-module load Anaconda3/5.0.1-fasrc02
+```module load Anaconda3/5.0.1-fasrc02
 
 module load python/3.6.3-fasrc02
 
-module load ffmpeg/4.0.2-fasrc01
+module load ffmpeg/4.0.2-fasrc01```
 
 ### Replicability Information
 
