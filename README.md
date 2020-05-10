@@ -90,31 +90,115 @@ Spark: the generation, location, and query of our particleIDs of interest is a r
 * EMR for Spark implementation
 * Cannon for OpenMP and high-performance computing
 
+### Software design
 
-```markdown
-Syntax highlighted code block
+* To get the gas information
 
-# Header 1
-## Header 2
-### Header 3
+* To get the tracer last snapshot before they fall into blackhole
 
-- Bulleted
-- List
+* To get tracer information
 
-1. Numbered
-2. List
 
-**Bold** and _Italic_ and `Code` text
+### How to use the code
 
-[Link](url) and ![Image](src)
-```
+To run spark job: 
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+Check out the repository at https://github.com/jenliketen/cs_205_project
 
-### Jekyll Themes
+In both files, there is a line snaps = range(0, 4380) that control how many snapshots we want to run. To run on a smaller set of data, modify it to snaps = range(4375, 4380)
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/jenliketen/cs_205_project/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+Now we can either run the job by:
 
-### Support or Contact
+Spinning up an EMR cluster, recommended to use 4-6 core nodes of m5.xlarge instances
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+Scp the 2 files to the cluster, and run spark-submit --master yarn --total-executor-cores 10 --conf SPARK_ACCESS_KEY=<your aws access key> --conf SPARK_SECRET_KEY=<your aws secret key> <script-file>
+
+Script file can be either fetch_gas_mid_reso_aws.py or fetch_gas_mid_reso_aws.py
+
+To run on Cannon, load the following modules:
+
+module load Anaconda3/5.0.1-fasrc02
+
+module load python/3.6.3-fasrc02
+
+module load ffmpeg/4.0.2-fasrc01
+
+### Replicability information
+
+Specs of the system	
+
+	Instance type: AWS m5.xlarge instance
+  
+Model: Intel(R) Xeon(R) Platinum 8175M CPU @ 2.50GHz
+
+	Number of CPUs: 4
+  
+	Number of cores per CPU: 2
+  
+	Clock rate: 2.50 GHz
+  
+Cache memory: 32 K
+
+Main memory: 122 GiB
+ 							
+Operating system
+
+	Amazon Linux 2018.03
+  
+Movie making is done on Cannon	
+
+Spark cluster
+
+Number of worker instances: 1, 2, 4
+
+ 	Release label: emr-5.29.0
+  
+ 	Hadoop distribution: Amazon
+  
+ 	Applications: Ganglia 3.7.2, Spark 2.4.4, Zeppelin 0.8.2 
+  
+Python, version 3.6.6
+
+Numpy, version
+
+H5py, version
+
+OpenMP, version
+
+### Speedup and scaling
+For TNG100-3:
+
+Collect data serially takes 21 minutes
+
+Collect data using a cluster of 6 worker nodes take 5.4 minutes
+
+For TNG100-2
+
+Collecting data for tracer takes 1h 50 minutes
+
+<font color='red'>Collecting data for particles take</font>
+
+Strong scaling speedup is tested using 20 snapshots
+
+Weak scaling speedup is tested using 10 to 80 snapshots
+
+<font color='red'>four speedup figures</font>
+
+### Overheads
+* I/O overhead: we have a massive amount of data splitting each snapshot into multiple files. This issue was addressed by uploading low-resolution snapshots into AWS S3 buckets.
+* Communication overhead: introduced through the mapping of gas cells to particleIDs. We were able to mitigate this overhead through parallel processing in Spark.
+* Synchronization overhead: mostly in the post-processing phase. This was resolved with shared-memory computing with OpenMP.
+
+### Models not explained in class
+We used the hdf5 file format, which is highly hierarchical and not simply lines in a file. The hdf5 format works great with our data; however, it poses its own challenges as well (see below).
+
+### Challenges
+* Queue times made developing Spark job on Cannon take too long, and so we could not implement our framework on the highest resolution run
+* Eventually decided to migrate ~1TB of data to S3 and use EMR
+* HDF5 is not optimal for cloud storage
+* We had originally wanted to output all of the properties of interest at once. However, since not all particle types contain these properties, this existing structure would introduce very complex loops that would make the Spark execution difficult. In the end, our most important properties were simply the coordinates, the masses, and the densities, so we called them separately instead. 
+* For the highest resolution run, the subbox contained a total of 11.2 TB of data, which was too much to upload to S3 (would run through our credits). While the data is on Cannon, we were not able to set up a spark cluster on Cannon due to technical difficulties and long queue times.
+
+### Closing remarks
+
+Overall, we achieved our project objectives and make easy-to-understand simulations for galaxy formation. We saw that by using Spark, we were able to process a large amount of data relatively efficiently. Cannon is not optimized for this type of data processing, but future flagship simulations which will have even greater data requirements can possibly use an EMR-like framework to optimize data locality. Additionally, analyzing individual snapshots can probably be performed on a single node using big compute paradigms, but analyzing a large number of snapshots would require big data paradigms.
