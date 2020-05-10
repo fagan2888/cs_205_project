@@ -67,17 +67,17 @@ Specifically, we took the following steps:
 
 1. Upload snapshot files from Cannon to AWS S3 buckets.
 
-2. Generate a list of snapshot files from which to search for particleIDs of interest. In our case, this consists of all of the snapshots with their complete paths.
+2. Generate a list of snapshot files from which to search for `particleID`s of interest. In our case, this consists of all of the snapshots with their complete paths.
 
-3. After a galaxy of interest and its corresponding supermassive black hole was identified by hand, we generated particles of interest in two ways:
+3. After a galaxy of interest and its corresponding supermassive black hole were identified by hand, generate particles of interest in two ways:
 
-a. we identified all gas cells that were within a certain radius of that galaxy at each snapshot
+⋅⋅a. Identify all gas cells within a certain radius of that galaxy at each snapshot.
 
-b. At the final snapshot we identified all tracer particles associated with the central blackhole. Then, at each previous snapshot we identified the position of those tracer particles whether they are associated black holes, gas, or stars.
+⋅⋅b. At the final snapshot, identify all tracer particles associated with the central blackhole. Then, at each previous snapshot, identify the position of those tracer particles whether they are associated black holes, gas, or stars.
 
-4. At each snapshot, the positions, masses, and densities for both 3a and 3b were saved.
+4. At each snapshot, the positions, masses, and densities for both Steps 3a and 3b were saved.
 
-5. Post-process for visualization using OpenMP implemented in python through pymp. <font color='red'>Particles mass distribution</font>
+5. Post-process for visualization using OpenMP implemented in Python through [`pymp`](https://github.com/classner/pymp). <font color='red'>Particles mass distribution</font>
 
 6. Create movie for simulation using FuncAnimation from matplotlib.
 
