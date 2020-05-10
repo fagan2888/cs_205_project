@@ -29,24 +29,18 @@ To create the simulations from the snapshot files, we processed the snapshots us
 
 2. Generate a list of snapshot files from which to search for particleIDs of interest. In our case, this consists of all of the snapshots with their complete paths.
 
-3. Generate particleIDs of interest by locating particles within a specified radius <font color='red'>(more physics here?)</font>
+3. After a galaxy of interest and its corresponding supermassive black hole was identified by hand, we generated particles of interest in two ways:
 
-&nbsp;&nbsp;&nbsp;&nbsp;* Gas particles
+a. we identified all gas cells that were within a certain radius of that galaxy at each snapshot
 
-&nbsp;&nbsp;&nbsp;&nbsp;* Blackhole particles
+b. At the final snapshot we identified all tracer particles associated with the central blackhole. Then, at each previous snapshot we identified the position of those tracer particles whether they are associated black holes, gas, or stars.
 
-&nbsp;&nbsp;&nbsp;&nbsp;* Tracer particles (we cannot directly track the properties of gas particles, so we assign a unique tracer particle to each gas particle and track these instead)
+4. At each snapshot, the positions, masses, and densities for both 3a and 3b were saved.
 
-&nbsp;&nbsp;&nbsp;&nbsp;* Blackhole tracer particles
+5. Post-process for visualization using OpenMP implemented in python through pymp. <font color='red'>Particles mass distribution</font>
 
+6. Create movie for simulation using FuncAnimation from matplotlib.
 
-4. Locate the particleIDs generated in Step 3 in the snapshot files generated in Step 1 using Spark.
-
-5. Access and store the coordinates and masses (if applicable) of the particles for post-processing.
-
-6. Post-process for visualization using OpenMP. <font color='red'>Add more info here.</font>
-
-7. Create movie for simulation.
 
 
 
