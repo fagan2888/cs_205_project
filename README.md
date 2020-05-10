@@ -204,3 +204,9 @@ We used the hdf5 file format, which is highly hierarchical and not simply lines 
 ### Closing remarks
 
 Overall, we achieved our project objectives and make easy-to-understand simulations for galaxy formation. We saw that by using Spark, we were able to process a large amount of data relatively efficiently. Cannon is not optimized for this type of data processing, but future flagship simulations which will have even greater data requirements can possibly use an EMR-like framework to optimize data locality. Additionally, analyzing individual snapshots can probably be performed on a single node using big compute paradigms, but analyzing a large number of snapshots would require big data paradigms.
+
+### Citations
+
+Weinberger, R., Springel, V., Hernquist, L., et al. 2017, MNRAS, 465, 3291
+
+Pillepich, A., Springel, V., Nelson, D., et al. 2018b, MNRAS, 473, 4077
