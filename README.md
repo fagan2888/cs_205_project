@@ -2,7 +2,7 @@
 
 ### Motivation
 
-Ever since the Big Bang until present-day, galaxies have been continuously evolving - into the state we all see now and ever-changing. Astronomers have made understanding galaxy formation and evolution possible by building large simulations of sections of the universe: we can “carve out” a part of the universe and record various aspects of particles of interest within for a period of time. By mapping the properties of these particles to 3-dimensional space, we can visualize the behavior of our galaxies of interest. Some of these complicated features include magnetic fields, gas cooling, black holes, and supernovas. These simulations serve as an important building block to unveil the mysteries of the universe.
+Ever since the Big Bang until present-day, galaxies have been continuously evolving - into the state we all see now and ever-changing. Astronomers have made understanding galaxy formation and evolution possible by building large simulations of sections of the universe: we can “carve out” a part of the universe and record various aspects of particles of interest for a period of time. By mapping the properties of these particles to 3-dimensional space, we can visualize the behavior of our galaxies of interest. Some of these complicated features include magnetic fields, gas cooling, black holes, and supernovae. These simulations serve as an important building block to unveil the mysteries of the universe.
 
 At the center of every galaxy is a supermassive black hole which grows through swallowing nearby gas and by merging with other black holes. This black hole can inject energy and momentum back into the gas around it, and is therefore integral to the formation and evolution of galaxies.
 
@@ -10,7 +10,7 @@ For our project, we followed the behavior of particles before they fall into bla
 
 ### Knowledge Gap
 
-The regions of the universe we "carve out" (referred to as boxes) are variable in size, with the largest being 300 Mpc in distance. Furthermore, the smaller boxes - or subboxes - are subsections of the large boxes:
+The regions of the universe we "carve out" (referred to as boxes) are variable in size, with the largest being 300 Mpc in distance. Furthermore, the smaller boxes - or subboxes - are subsections of the large boxes (Source: TNG Collaboration):
 
 ![Boxes](./images/image1.jpg)
 
@@ -29,7 +29,7 @@ The need for efficient big data processing becomes obvious as we aim to analyze 
 
 ### Data
 
-We used the Illustris TNG dataset, which is stored on Cannon in `/n/hernquistfs3/IllustrisTNG`. If you have a Cannon userID, access can be obtained by filling out a request form [here](https://portal.rc.fas.harvard.edu/request/grants/add).
+We used the Illustris TNG dataset, which is stored on Cannon. The data for the TNG100 and TNG300 datasets is also publicly available on the [TNG website](https://www.tng-project.org).
 
 Below is a simple schematic demonstrating the file and data organization:
 
@@ -40,14 +40,14 @@ Data for each box is stored under a subdirectory called Runs. The directory name
 * L is box size
 * N is number of particles/resolution cubed
 
-_(so a directory with the name `L205n1250TNG` means that the box size is 205 Mpc with 1,250 particles<sup>3</sup>)_.
+_(so a directory with the name `L205n1250TNG` means that the box size is 205 Mpc with 1250<sup>3</sup> particles)_.
 
 Within each box’s directory, the snapshot `hdf5` files are stored in their respective snapshot directories starting with `snapdir`. Each file contains two layers in hierarchical order:
 
 * Layer 1, `PartType<x>`: headers specifying particle types
 * Layer 2, `Properties`: properties of the particles of the same type
 
-Here is an example to access the properties of particles:
+Additional global information about the simulation is stored in a header. Here is an example to access the properties of particles:
 
 ![](./images/image4.jpg)
 
@@ -72,7 +72,7 @@ Specifically, we took the following steps:
     a. Identify all gas cells within a certain radius of that galaxy at each snapshot.    
     b. At the final snapshot, identify all tracer particles associated with the central blackhole. Then, at each previous snapshot, identify the position of those tracer particles whether they are associated black holes, gas, or stars.
 4. At each snapshot, save the positions, masses, and densities for both Steps 3a and 3b.
-5. Post-process for visualization using OpenMP implemented in Python through [`pymp`](https://github.com/classner/pymp). <font color='red'>Particles mass distribution</font>
+5. Post-process for visualization using OpenMP implemented in Python through [`pymp`](https://github.com/classner/pymp). Each resolution element is spread over neighboring pixels using a truncated Gaussian filter. We set the size of the filter to be \~0.5 times the resolution element size.
 6. Create movie for simulation using `FuncAnimation` from `matplotlib`.
 
 The source code for our project can be found [here](../master/src).
@@ -197,7 +197,7 @@ We used the `hdf5 file` format, which is highly hierarchical and not simply line
 
 ### Challenges
 
-* Queue times made developing Spark job on Cannon take too long, and so we could not implement our framework on the highest resolution runs. We eventually decided to migrate ~1 TB of data to S3 and use EMR.
+* Queue times made developing Spark job on Cannon take too long, and so we could not implement our framework on the highest resolution runs. We eventually decided to migrate \~1 TB of data to S3 and use EMR.
 * The `hdf5` file format is not optimal for cloud storage.
 * We had originally wanted to output all of the properties of interest at once. However, since not all particle types contain these properties, this existing structure would introduce very complex loops that would make the Spark execution difficult. In the end, our most important properties were simply the coordinates, the masses, and the densities, so we called them separately instead. 
 * For the highest resolution run, the subbox contained a total of 11.2 TB of data, which was too much to upload to S3 (would run through our credits). While the data is on Cannon, we were not able to set up a Spark cluster on Cannon due to technical difficulties and long queue times.
