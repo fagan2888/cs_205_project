@@ -75,7 +75,7 @@ Specifically, we took the following steps:
     
     b. At the final snapshot, identify all tracer particles associated with the central blackhole. Then, at each previous snapshot, identify the position of those tracer particles whether they are associated black holes, gas, or stars.
 
-4. At each snapshot, the positions, masses, and densities for both Steps 3a and 3b were saved.
+4. At each snapshot, save the positions, masses, and densities for both Steps 3a and 3b.
 
 5. Post-process for visualization using OpenMP implemented in Python through [`pymp`](https://github.com/classner/pymp). <font color='red'>Particles mass distribution</font>
 
