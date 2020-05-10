@@ -35,11 +35,10 @@ Below is a simple schematic demonstrating the file and data organization:
 
 ![](./images/image3.jpg)
 
-Data for each box is stored under a subdirectory called Runs. The directory name for the boxes is an alphanumeric string that takes the form of L_n_TNG, where
+Data for each box is stored under a subdirectory called Runs. The directory name for the boxes is an alphanumeric string that takes the form of `L<xxx>n<xxxx>TNG`, where
 
-L is box size
-
-N is number of particles/resolution cubed
+* L is box size
+* N is number of particles/resolution cubed
 
 (so a directory with the name L205n1250TNG means that the box size is 205 Mpc with 1,250 particles3)
 
