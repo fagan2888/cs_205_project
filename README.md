@@ -77,7 +77,7 @@ The source code for our project can be found [here](../master/src).
 
 ### Simulation
 
-
+[![](http://img.youtube.com/vi/xxQMtYnR1FA/0.jpg)](https://youtu.be/xxQMtYnR1FA)
 
 ### Parallel Application
 
