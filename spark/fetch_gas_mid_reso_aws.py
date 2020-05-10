@@ -15,7 +15,7 @@ def extract_gas_info(filepath, position, radius, snapnum):
 
     ptype = 'PartType0'
     if (ptype not in dat.keys()):
-        return []
+        return np.array([]).shape(0,6)
 
     pos = np.array(dat[ptype]['Coordinates'])
     pos = np.subtract(pos, position)
@@ -39,17 +39,35 @@ def extract_gas_from_snap(snap, position, radius):
     return ret
     
 def extract_map(snap):
-    position = subhalo_positions_bc.value[snap]
-    ret = extract_gas_from_snap(snap, position, radius)
-    return ret
+    try:
+      position = subhalo_positions_bc.value[snap]
+      ret = extract_gas_from_snap(snap, position, radius)
+      return ret
+    except Exception as ex:
+      print('snap error: ' + str(snap))
+      print(ex)
+      return []
     
 def snap_tofile(snap):
     return 'spark-illustris-tng/tng100-2/subbox1/snapdir_subbox1_{0}/*.hdf5'.format(snap)
-    
+
+def get_subhalo_pos(s3):
+    f = s3.open('spark-illustris-tng/tng100_2_subhalo_pos').readlines()
+    ret = []
+    for row in f:
+        row = row.strip().split(' ')
+        vals = []
+        for val in row:
+            vals.append(float(val))
+        
+        ret.append(vals)
+    return ret
+
 ### VARIABLES
 
-ACCESS_KEY = os.environ['SPARK_ACCESS_KEY']
-SECRET_KEY = os.environ['SPARK_SECRET_KEY']
+conf = SparkConf().setAppName('GenerateParticleData')
+ACCESS_KEY = conf.get('SPARK_ACCESS_KEY')
+SECRET_KEY = conf.get('SPARK_SECRET_KEY')
 
 timestamp = datetime.now().strftime("%m%d_%H%M")
 print("timestamp: " + str(timestamp))
@@ -60,13 +78,14 @@ subhalo_id = 89587
 subhalo_positions = get_subhalo_pos(s3)
 radius = 140
 
+snaps = range(0, 4380)
 ### SPARK
 
 sc = SparkContext(conf = conf)
 subhalo_positions_bc = sc.broadcast(subhalo_positions)
 
-df = sc.parallelize(range(2000, 4380)) \
-  .repartition(10)
+df = sc.parallelize(snaps) \
+  .repartition(10)         \
   .flatMap(extract_map)
 
-df.saveAsTextFile('s3a://spark-namluu-output/illustrisdata_{0}'.format(timestamp))
+df.repartition(1).saveAsTextFile('s3a://spark-namluu-output/illustrisdata_gas_{0}'.format(timestamp))

@@ -16,11 +16,10 @@ export MASTER=spark://$HOSTNAME.rc.fas.harvard.edu:7077
 export URL=rc.fas.harvard.edu
 NODEFILE=nodefile.txt
 
-echo $SLURM_NODELIST | tr -d 'holy7c' | tr -d [ | tr -d ] | perl -pe 's/(\d+)-(\d+)/join(",",$1..$2)/eg' | awk 'BEGIN { RS=","} { print "holy7c"$1}' > $NODEFILE
-echo "HOST FILE"
-cat $NODEFILE
+echo $SLURM_NODELIST | tr -d 'holy7c' | tr -d [ | tr -d ] \
+    | perl -pe 's/(\d+)-(\d+)/join(",",$1..$2)/eg' \
+    | awk 'BEGIN { RS=","} { print "holy7c"$1}' > $NODEFILE
 
-name=$(echo $SLURM_NODELIST | cut -d '-' -f1 - | tr -d '[')
 source "$SPARK_HOME/sbin/start-master.sh"
 source "$SPARK_HOME/sbin/start-slave.sh" $MASTER
 

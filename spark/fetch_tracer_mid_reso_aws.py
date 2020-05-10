@@ -165,8 +165,11 @@ def get_subhalo_pos(s3):
 
 ### METADATA
 
-ACCESS_KEY = os.environ['SPARK_ACCESS_KEY']
-SECRET_KEY = os.environ['SPARK_SECRET_KEY']
+conf = SparkConf().setAppName('GenerateTracerData')
+sc = SparkContext(conf = conf)
+
+ACCESS_KEY = conf.get('SPARK_ACCESS_KEY')
+SECRET_KEY = conf.get('SPARK_SECRET_KEY')
 
 s3 = s3fs.S3FileSystem(key=ACCESS_KEY, secret=SECRET_KEY)
 
@@ -176,7 +179,7 @@ print('length subhalo positions')
 print(len(subhalo_positions))
 radius = 140
 
-snaps = range(3000, 4380)
+snaps = range(0, 4380)
 
 last_snap = snaps[-1]
 lastfiles = s3.glob(snap_tofile(last_snap))
@@ -186,9 +189,6 @@ timestamp = datetime.now().strftime("%m%d_%H%M")
 print(timestamp)
 
 ### SPARK
-
-conf = SparkConf().setAppName('GenerateTracerData')
-sc = SparkContext(conf = conf)
 
 
 """
@@ -206,4 +206,4 @@ get_position_map = lambda f: get_position(f, tracer_ids_bc, tracer_snaps_bc)
 
 df = sc.parallelize(snaps).repartition(10)
 
-df.flatMap(get_position_map).repartition(1).saveAsTextFile('s3a://spark-namluu-output/illustrisdata_{0}'.format(timestamp))
+df.flatMap(get_position_map).repartition(1).saveAsTextFile('s3a://spark-namluu-output/illustrisdata_tracer{0}'.format(timestamp))
