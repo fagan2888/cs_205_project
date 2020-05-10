@@ -40,27 +40,26 @@ Data for each box is stored under a subdirectory called Runs. The directory name
 * L is box size
 * N is number of particles/resolution cubed
 
-_(so a directory with the name `L205n1250TNG` means that the box size is 205 Mpc with 1,250 particles<sup>3</sup>)_
+_(so a directory with the name `L205n1250TNG` means that the box size is 205 Mpc with 1,250 particles<sup>3</sup>)_.
 
-Within each box’s directory, the snapshot hdf5 files are stored in their respective snapshot directories starting with snapdir. Each file contains two layers in hierarchical order:
+Within each box’s directory, the snapshot `hdf5` files are stored in their respective snapshot directories starting with `snapdir`. Each file contains two layers in hierarchical order:
 
-Layer 1: headers specifying particle types
-
-Layer 2: properties of the particles
+* Layer 1: headers specifying particle types
+* Layer 2: properties of the particles of the same type
 
 Here is an example to access the properties of particles:
 
 ![](./images/image4.jpg)
 
-Note: not every snapshot contains all of the particle types, and not every particle has all of the properties
+_(Note: not every snapshot contains all of the particle types, and not every particle has all of the properties. As we saw later on, this poses its own challenges.)_
 
 ### Existing Work
 
-Common techniques to analyze these large sets of data either parallelize at the scheduler level (e.g. SLURM), which is cumbersome and requires tedious post-processing of the results, or through distributed memory parallelism (e.g. MPI), which presents significant implementation overhead. We aimed to process the simulation data using Spark.
+Common techniques to analyze these large sets of data either parallelize at the scheduler level (_eg._ SLURM), which is cumbersome and requires tedious post-processing of the results, or through distributed memory parallelism (_eg._ MPI), which presents significant implementation overhead. To mitigate this, we aimed to process the simulation data using Spark.
 
 ### Our Solution
 
-To create the simulations from the snapshot files, we processed the snapshots using the Amazon EMR framework and visualized the results taking advantage of CPU computing on Cannon.
+To create the simulations from the snapshot files, we processed the snapshots using the Amazon EMR framework and visualized the results taking advantage of CPU computing using OpenMP on Cannon.
 
 ![Project workflow](./images/image2.jpg)
 
