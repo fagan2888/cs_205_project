@@ -77,7 +77,11 @@ Specifically, we took the following steps:
 
 The source code for our project can be found [here](../master/src).
 
-### Simulation
+### Results
+
+We generate 2 simulations, one from low resolution data (TNG100-3-subbox1), and one from medium resolution data (TNG100-2-subbox1). 
+
+For TNG100-2-subbox1, from 800GB of data, we were able to use Spark to extract the particles and tracers of interest, which is about 1.7GB in size. We then use OpenMP for binning and smoothing process, and to create the video. Here is the result from the medium resolution data:
 
 [![](http://img.youtube.com/vi/xxQMtYnR1FA/0.jpg)](https://youtu.be/xxQMtYnR1FA)
 
@@ -240,6 +244,7 @@ These are the experiments we did that was outside the scope of the class. Even t
 Spark is not one of the built-in module for Harvard Slurm. We figure out a workaround following the steps:
 * Download Spark installation tarball file to the login node of Cannon
 * Create `slurm.sh` with the following content
+  
 ```bash
 #!/bin/bash
 #
