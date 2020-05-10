@@ -49,7 +49,46 @@ b. At the final snapshot we identified all tracer particles associated with the 
 
 6. Create movie for simulation using FuncAnimation from matplotlib.
 
+### Data
 
+We used the Illustris TNG dataset, which is stored on Cannon as /n/hernquistfs3/IllustrisTNG. If you have a Cannon userid, access can be obtained by filling out a request form here.
+
+Below is a simple schematic demonstrating the file and data organization:
+
+<font color='red'>flowchart of data structure</font>
+
+Data for each box is stored under a subdirectory called Runs. The directory name for the boxes is an alphanumeric string that takes the form of L_n_TNG, where
+
+L is box size
+
+N is number of particles/resolution cubed
+
+(so a directory with the name L205n1250TNG means that the box size is 205 Mpc with 1,250 particles3)
+
+Within each box’s directory, the snapshot hdf5 files are stored in their respective snapshot directories starting with snapdir. Each file contains two layers in hierarchical order:
+
+Layer 1: headers specifying particle types
+
+Layer 2: properties of the particles
+
+Note: not every snapshot contains all of the particle types, and not every particle has all of the properties
+
+### Parallel application
+
+Our application uses a single program, multiple data (SPMD) execution model that distributes tasks and simultaneously runs them on multiple processors and nodes. We took advantage of functional parallelism (task parallelism), decomposing the problem into smaller tasks and assigning these to the processors. We executed our model at the loop level, as the majority of our tasks consists of iterating through large lists of files as well as through lines of individual files.
+
+### Programming models
+
+* Our application uses a hybrid programming model consisting of Spark and OpenMP to address the big data and big compute problems, respectively.
+Spark: the generation, location, and query of our particleIDs of interest is a repetitive process that searches through the files and outputs each particle’s properties we need to create the simulation. The Spark framework partitions the data into RDDs and operates on them in a parallel fashion, writing outputs only when we need them, which greatly reduces storage and runtime.
+
+* OpenMP: to make a movie using the particle properties obtained using Spark, we need to do a significant amount of post-processing of the results. In addition to the binning, we also found that applying a Gaussian smoothing filter to the particle data was necessary in order to make the visualization look nice. We implemented the binning and smoothing function in C and exposed this procedure to python using the ctypes library. This function was applied to each snapshot, which we also parallelized through OpenMP using the pymp library. This procedure was implemented on cannon.
+
+### Platform and infrastructure
+
+* AWS S3 buckets for data storage
+* EMR for Spark implementation
+* Cannon for OpenMP and high-performance computing
 
 
 ```markdown
