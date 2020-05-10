@@ -109,63 +109,100 @@ We used 3 Spark jobs:
 
 ### Tutorial for Code
 
-To run the Spark jobs, check out the repository [here](https://github.com/jenliketen/cs_205_project).
+There are 2 phases in our project, the first phase involves collecting gas data from TNG dataset and the second phase for binning and smoothing, which uses OpenMP. Since our dataset is stored in S3, make sure you have an access key and secret key pair of an IAM user that have read access to s3. You can create a new user on AWS Management Console directly following the steps here [AWS User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html). 
 
-In <font color='red'>both files (?)</font>, there is a line `snaps = range(0, 4380)` that controls how many snapshots we want to run. To run on a smaller set of data, modify it to ```snaps = range(4375, 4380)```.
+#### Tutorial for running Spark job
+There are 2 main scripts to collect the data:
+* `fetch_gas_mid_reso_aws.py`: collects information about gas particle, the fields of interest are coordinates, masses, and densities
+* `fetch_tracer_mid_reso_aws.py`: collects information about tracer particles. 
 
-Now we can either run the job by:
+**These 2 files, by default, will attempt to read through the entire dataset of TNG, which is about 800GB and it will take a while to run**. In order to run the code on a smaller subset of data, in both files, find a line `snaps = range(0, 4380)`. This line controls the number of snapshots that we want to collect data. To analyze a smaller dataset, simply modify it to ```snaps = range(4375, 4380)```. There are 4380 snapshots in total, and `snaps` can be any interval in the range `[0, 4380]`.
 
-* Spinning up an EMR cluster, recommended to use 4-6 core nodes of m5.xlarge instances
-* `scp` the 2 files to the cluster, and run `spark-submit --master yarn --total-executor-cores 10 --conf SPARK_ACCESS_KEY=<your aws access key> --conf SPARK_SECRET_KEY=<your aws secret key> <script-file>`
+Furthermore, the 2 scripts default to save data to `s3://spark-namluu-output`, modify this line to save to the destination bucket of your choice. **These output files will be used for the binning and smoothing process.**
 
-The script file can be either `fetch_gas_mid_reso_aws.py` or `fetch_gas_mid_reso_aws.py`.
+The 2 scripts use 2 dependencies `h5py` and `s3fs`, so in order to run the scripts in emr, we have to install the modules on every node in the clusters. This can be done by
+* Creating a bootstrap script with the following command
+```bash
+sudo pip install h5py
+sudo pip install s3fs
+```
+When spinning up an EMR cluster, in the advanced section, there is a section for selecting bootrap action in **Step 3: General Cluster Setting**. Select *Custom run* and point to the boothstrap script.
 
-To run on Cannon, load the following modules:
+There are 2 ways to run the jobs:
+* From the terminal (recommended for testing and playing with the dataset):
+  * Spinning up an empty Spark cluster on EMR, using either `awscli` or from AWS Management Console
+  * `scp` the 2 files to the cluster, and r
+  * Execute the following command
+   ```
+   spark-submit --master yarn --total-executor-cores 10 --conf SPARK_ACCESS_KEY=<your aws access key> --conf SPARK_SECRET_KEY=<your aws secret key> <script-file>
+   ```
+   where `<script-file>` can be either `fetch_gas_mid_reso_aws.py` or `fetch_gas_mid_reso_aws.py`.
+* From AWS Management Console (recommended for the full run of the entire dataset):
+  * Upload the 2 script files to s3
+  * Create an EMR cluster, use Advanced option
+  * **Select at least Spark** as one of the software in the software configuration section, use `emr 5-29.0` release
+  * In the **Steps** section, click add steps
+    * For the **Application location**, select one of the scripts on s3
+    * For **Spark-submit options**, use the following
+    ```
+    --total-executor-cores 10 --conf SPARK_ACCESS_KEY=<access_key> --conf SPARK_SECRET_KEY=<secret_key>
+    ```
+  * The rest can be left as default, run the cluster
 
+#### Tutorial for running OpenMP section
+This tutorial assumes the OpenMP code will be ran on Cannon, though it should work with any machine having OpenMP and all the dependencies installed.
+To run on Cannon, first load the following modules:
 ```
 module load Anaconda3/5.0.1-fasrc02
 module load python/3.6.3-fasrc02
 module load ffmpeg/4.0.2-fasrc01
 ```
-
+The code use `pymp` and `s3fs` modules, which can be installed using commands. `h5py` should already be included in the `Anaconda` module.
+```
+pip install --user s3fs
+pip install --user pymp-pypi
+```
 ### Replicability Information
 
-Specs of the system:	
+#### Spark cluster
 
-* Instance type: AWS m5.xlarge instance
-* Model: Intel(R) Xeon(R) Platinum 8175M CPU @ 2.50GHz
-* Number of CPUs: 4 
-* Number of cores per CPU: 2
-* Clock rate: 2.50 GHz
-* Cache memory: 32 K
-* Main memory: 122 GiB
- 							
-Operating system:
+##### Cluster spec
 
-* Amazon Linux 2018.03
+|   Specs        |   Value                |
+|----------------|------------------------|
+|Number of worker instances| 6 |
+|Release label| emr-5.29.0 |
+| Spark |2.4.4|
+##### Machine spec
 
-Spark cluster:
+|   Specs        |   Value                |
+|----------------|------------------------|
+|Instance type   | AWS m5.xlarge instance |
+|Operating System| Amazon Linux 2018.03   |
+|CPU             | Intel(R) Xeon(R) Platinum 8175M CPU @ 2.50GHz |
+|Number of CPUs  | 4                      |
+|Number of cores per CPU   | 2 |
+|RAM  | 16GB |
 
-* Number of worker instances: 1, 2, 4
-* Release label: emr-5.29.0
-* Hadoop distribution: Amazon
-* Applications: Ganglia 3.7.2, Spark 2.4.4, Zeppelin 0.8.2
+#### OpenMP (on Cannon)
 
-Movie making:
-* Cannon
+##### Machine spec
+|   Specs        |   Value                |
+|----------------|------------------------|
+|Instance type   | AWS m5.xlarge instance |
+|Operating System| Amazon Linux 2018.03   |
+|CPU             | Intel(R) Xeon(R) Gold 6134 CPU @ 3.20GHz |
+|Number of CPUs  | 16                     |
+|Number of cores per CPU   | 8 |
 
-Libraries:
-
-* Python, version 3.6.3
-
-    <font color='red'>* Numpy, version</font>
-
-    <font color='red'>* H5py, version</font>
-
-<font color='red'>* OpenMP, version</font>
-
+##### Libraries
+We mostly use built-in modules of Cannon, and the version is already mentioned in the **Tutorial for Code** section. We only install 2 extra dependencies `h5py` and `pymp`
+* s3fs: 0.4.2
+* pymp: 0.4.2 (yes, they have the same version, it's not a typo)
 
 ### Speedup and Scaling
+
+We use 2 dataset, TNG100-3-subbox1, which contains the data of the lowest resolution run (53GB), and TNG100-2-subbox1, which contains the data of the mid resolution run (800GB)
 
 For TNG100-3:
 
@@ -175,16 +212,19 @@ For TNG100-3:
 For TNG100-2:
 
 * Collecting data for tracer takes 1 hour 50 minutes
-* <font color='red'>Collecting data for particles takes</font>
+* Collecting data for particles takes take ~ 2 hours
 
-Strong scaling speedup is tested using 20 snapshots.
-
-Weak scaling speedup is tested using 10 to 80 snapshots.
-
-Here is a plot demonstrating the relative performance using various modes of scaling:
+For speed-up and performance testing, we use 1% data of TNG100-2 subbox1, which is about 8GB. Since our application contains 2 phase, one for collecting gas particles' information using Spark and one for movie making in OpenMP, we did 2 performance testing. We calculate the speed-up and the result is showed below:
 
 ![Performance with strong and weak scaling](./images/image5.jpg)
 
+#### Comments
+For OpenMP, since our code is parallelized to the loop level to be able to work with each snapshot independently, and this explains the curve of the weak scaling graph.
+
+For strong scaling:
+* OpenMP: we detects that the performance decreases a after we use more than 12 threads, which is a bit surprising since the machine being tested on have 16 CPU with 8 core/CPU. We think that the synchronization and communication overhead starts becoming a bottleneck and it overshadows the effect of parallelization. 
+* Spark: the performance after 8 executors is negligient, in the final iteration of the dataset, we decided to use 10 executors on a 6 machine-cluster.
+  
 ### Overheads
 
 * I/O overhead: we have a massive amount of data splitting each snapshot into multiple files. This issue was addressed by uploading low-resolution snapshots into AWS S3 buckets.
