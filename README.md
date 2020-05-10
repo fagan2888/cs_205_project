@@ -71,9 +71,9 @@ Specifically, we took the following steps:
 
 3. After a galaxy of interest and its corresponding supermassive black hole were identified by hand, generate particles of interest in two ways:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a. Identify all gas cells within a certain radius of that galaxy at each snapshot.
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b. At the final snapshot, identify all tracer particles associated with the central blackhole. Then, at each previous snapshot, identify the position of those tracer particles whether they are associated black holes, gas, or stars.
+    a. Identify all gas cells within a certain radius of that galaxy at each snapshot.
+    
+    b. At the final snapshot, identify all tracer particles associated with the central blackhole. Then, at each previous snapshot, identify the position of those tracer particles whether they are associated black holes, gas, or stars.
 
 4. At each snapshot, the positions, masses, and densities for both Steps 3a and 3b were saved.
 
