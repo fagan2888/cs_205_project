@@ -1,14 +1,16 @@
 ## TRACKING GALAXIES OVER TIME
 
-### Introduction
+### Problem
 
 Over the course of time from the Big Bang until present-day, galaxies have been continuously evolving - into the state we all see now and ever-changing. Astronomers have made understanding galaxy formation and evolution possible by building large simulations of sections of the universe: we can “carve out” a part of the universe and record various aspects of the particles of interest within and continue for a period of time. By mapping the properties of these particles to 3-dimensional space, we can visualize the behavior of our galaxies of interest. Some of these complicated features include magnetic fields, gas cooling, black holes, and supernovas. These simulations serve as an important building block to unveil the mysteries of the universe.
 
 At the center of every galaxy is a supermassive black hole which grows through swallowing nearby gas and by merging with other black holes. This black hole can inject energy and momentum back into the gas around it, and is therefore integral to the formation and evolution of galaxies.
 
-For our project, we followed the behavior of gas particles before they fall into black holes using particle data over time snapshots stored as hdf5 files. In order to do this, we utilized the tracer particles present in the simulation. These tracer particles track the transfer of mass between different particle types (e.g. gas converted into stars or gas converted into black holes). Each tracer is associated with a parent cell (either gas, star, or black hole), but the tracer can change which parent it is associated with between each snapshot according to the underlying physics of the simulation.
+For our project, we followed the behavior of gas particles before they fall into black holes using particle data over time snapshots stored as hdf5 files. In order to do this, we utilized the tracer particles present in the simulation. These tracer particles track the transfer of mass between different particle types (e.g. gas converted into stars or gas converted into black holes). Each tracer is associated with a parent cell (either gas, star, or black hole), but the tracer can change which parent it is associated with between each snapshot according to the underlying physics of the simulation. The end result is a movie out of the snapshots containing the positions and masses of the associated particles.
 
-For each of the sections (referred to as boxes) we are interested in, we made a movie out of the snapshots containing the positions and masses of the associated particles. The boxes are variable in size, with the largest being 300 Mpc in distance. The smaller boxes - or subboxes - are subsections of the large boxes.
+### Need for HPC and big data
+
+The regions of interest (referred to as boxes) are variable in size, with the largest being 300 Mpc in distance. The smaller boxes - or subboxes - are subsections of the large boxes:
 
 ![Boxes](./images/image1.jpg)
 
@@ -24,32 +26,6 @@ Subbox total size (up to) | NA | 41 TB | 19.6 TB
 In addition to the three boxes, each box has three resolution levels. We focused on the TNG100 box and the two lowest resolution levels (TNG100-3 and TNG100-2). Because of time constraints we were not able to test our pipeline on the highest resolution (TNG100-1).
 
 The need for efficient big data processing becomes obvious as we aim to analyze the evolution of a small region in the universe over a long period of time. Each box usually consists of thousands to hundreds of thousands of galaxies, and each galaxy is resolved with up to tens of thousands resolution elements. Normally, we are only interested in a small region of the simulation, so we need to locate our particles of interest from a huge list and access and store their properties with ease. Additionally, visualization of the galaxies is compute-intensive.
-
-### Methods
-
-To create the simulations from the snapshot files, we processed the snapshots using the Amazon EMR framework and visualized the results taking advantage of CPU computing on Cannon.
-
-![Project workflow](./images/image2.jpg)
-
-Specifically, we took the following steps:
-
-1. Upload snapshot files from Cannon to AWS S3 buckets.
-
-2. Generate a list of snapshot files from which to search for particleIDs of interest. In our case, this consists of all of the snapshots with their complete paths.
-
-3. After a galaxy of interest and its corresponding supermassive black hole was identified by hand, we generated particles of interest in two ways:
-
-a. we identified all gas cells that were within a certain radius of that galaxy at each snapshot
-
-b. At the final snapshot we identified all tracer particles associated with the central blackhole. Then, at each previous snapshot we identified the position of those tracer particles whether they are associated black holes, gas, or stars.
-
-4. At each snapshot, the positions, masses, and densities for both 3a and 3b were saved.
-
-5. Post-process for visualization using OpenMP implemented in python through pymp. <font color='red'>Particles mass distribution</font>
-
-6. Create movie for simulation using FuncAnimation from matplotlib.
-
-The source code for our project can be found here: https://github.com/jenliketen/cs_205_project/tree/master/src
 
 ### Data
 
@@ -79,24 +55,57 @@ Here is an example to access the properties of particles:
 
 Note: not every snapshot contains all of the particle types, and not every particle has all of the properties
 
-### Parallel application
+### Existing Work
+
+Common techniques to analyze these large sets of data either parallelize at the scheduler level (e.g. SLURM), which is cumbersome and requires tedious post-processing of the results, or through distributed memory parallelism (e.g. MPI), which presents significant implementation overhead. We aimed to process the simulation data using Spark.
+
+### Our Solution
+
+To create the simulations from the snapshot files, we processed the snapshots using the Amazon EMR framework and visualized the results taking advantage of CPU computing on Cannon.
+
+![Project workflow](./images/image2.jpg)
+
+Specifically, we took the following steps:
+
+1. Upload snapshot files from Cannon to AWS S3 buckets.
+
+2. Generate a list of snapshot files from which to search for particleIDs of interest. In our case, this consists of all of the snapshots with their complete paths.
+
+3. After a galaxy of interest and its corresponding supermassive black hole was identified by hand, we generated particles of interest in two ways:
+
+a. we identified all gas cells that were within a certain radius of that galaxy at each snapshot
+
+b. At the final snapshot we identified all tracer particles associated with the central blackhole. Then, at each previous snapshot we identified the position of those tracer particles whether they are associated black holes, gas, or stars.
+
+4. At each snapshot, the positions, masses, and densities for both 3a and 3b were saved.
+
+5. Post-process for visualization using OpenMP implemented in python through pymp. <font color='red'>Particles mass distribution</font>
+
+6. Create movie for simulation using FuncAnimation from matplotlib.
+
+The source code for our project can be found here: https://github.com/jenliketen/cs_205_project/tree/master/src
+
+### Parallel Application
 
 Our application uses a single program, multiple data (SPMD) execution model that distributes tasks and simultaneously runs them on multiple processors and nodes. We took advantage of functional parallelism (task parallelism), decomposing the problem into smaller tasks and assigning these to the processors. We executed our model at the loop level, as the majority of our tasks consists of iterating through large lists of files as well as through lines of individual files.
 
-### Programming models
+### Programming Models
 
-* Our application uses a hybrid programming model consisting of Spark and OpenMP to address the big data and big compute problems, respectively.
-Spark: the generation, location, and query of our particleIDs of interest is a repetitive process that searches through the files and outputs each particle’s properties we need to create the simulation. The Spark framework partitions the data into RDDs and operates on them in a parallel fashion, writing outputs only when we need them, which greatly reduces storage and runtime.
+Our application uses a hybrid programming model consisting of Spark and OpenMP to address the big data and big compute problems, respectively.
+
+* Spark: the generation, location, and query of our particleIDs of interest is a repetitive process that searches through the files and outputs each particle’s properties we need to create the simulation. The Spark framework partitions the data into RDDs and operates on them in a parallel fashion, writing outputs only when we need them, which greatly reduces storage and runtime.
 
 * OpenMP: to make a movie using the particle properties obtained using Spark, we need to do a significant amount of post-processing of the results. In addition to the binning, we also found that applying a Gaussian smoothing filter to the particle data was necessary in order to make the visualization look nice. We implemented the binning and smoothing function in C and exposed this procedure to python using the ctypes library. This function was applied to each snapshot, which we also parallelized through OpenMP using the pymp library. This procedure was implemented on Cannon.
 
-### Platform and infrastructure
+### Platform and Infrastructure
 
 * AWS S3 buckets for data storage
 * EMR for Spark implementation
 * Cannon for OpenMP and high-performance computing
 
-### Software design
+### Software Design
+
+We use 3 Spark jobs:
 
 * To get the gas information
 
@@ -105,7 +114,7 @@ Spark: the generation, location, and query of our particleIDs of interest is a r
 * To get tracer information
 
 
-### How to use the code
+### Tutorial for Code
 
 To run spark job: 
 
@@ -129,7 +138,7 @@ module load python/3.6.3-fasrc02
 
 module load ffmpeg/4.0.2-fasrc01
 
-### Replicability information
+### Replicability Information
 
 Specs of the system	
 
@@ -171,7 +180,8 @@ H5py, version
 
 OpenMP, version
 
-### Speedup and scaling
+### Speedup and Scaling
+
 For TNG100-3:
 
 Collect data serially takes 21 minutes
@@ -191,21 +201,24 @@ Weak scaling speedup is tested using 10 to 80 snapshots
 ![Performance with strong and weak scaling](./images/image5.jpg)
 
 ### Overheads
+
 * I/O overhead: we have a massive amount of data splitting each snapshot into multiple files. This issue was addressed by uploading low-resolution snapshots into AWS S3 buckets.
 * Communication overhead: introduced through the mapping of gas cells to particleIDs. We were able to mitigate this overhead through parallel processing in Spark.
 * Synchronization overhead: mostly in the post-processing phase. This was resolved with shared-memory computing with OpenMP.
 
-### Models not explained in class
+### Advanced Data Structures
+
 We used the hdf5 file format, which is highly hierarchical and not simply lines in a file. The hdf5 format works great with our data; however, it poses its own challenges as well (see below).
 
 ### Challenges
+
 * Queue times made developing Spark job on Cannon take too long, and so we could not implement our framework on the highest resolution run
 * Eventually decided to migrate ~1TB of data to S3 and use EMR
 * HDF5 is not optimal for cloud storage
 * We had originally wanted to output all of the properties of interest at once. However, since not all particle types contain these properties, this existing structure would introduce very complex loops that would make the Spark execution difficult. In the end, our most important properties were simply the coordinates, the masses, and the densities, so we called them separately instead. 
 * For the highest resolution run, the subbox contained a total of 11.2 TB of data, which was too much to upload to S3 (would run through our credits). While the data is on Cannon, we were not able to set up a spark cluster on Cannon due to technical difficulties and long queue times.
 
-### Closing remarks
+### Closing Remarks
 
 Overall, we achieved our project objectives and make easy-to-understand simulations for galaxy formation. We saw that by using Spark, we were able to process a large amount of data relatively efficiently. Cannon is not optimized for this type of data processing, but future flagship simulations which will have even greater data requirements can possibly use an EMR-like framework to optimize data locality. Additionally, analyzing individual snapshots can probably be performed on a single node using big compute paradigms, but analyzing a large number of snapshots would require big data paradigms.
 
