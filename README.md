@@ -10,7 +10,7 @@ For our project, we followed the behavior of gas particles before they fall into
 
 For each of the sections (referred to as boxes) we are interested in, we made a movie out of the snapshots containing the positions and masses of the associated particles. The boxes are variable in size, with the largest being 300 Mpc in distance. The smaller boxes - or subboxes - are subsections of the large boxes.
 
-<font color='red'>pics for the boxes</font>
+![Boxes](/images/image1.jpg)
 
 The size and number of snapshots also vary across boxes and subboxes, as shown in the table below:
 
@@ -29,7 +29,7 @@ The need for efficient big data processing becomes obvious as we aim to analyze 
 
 To create the simulations from the snapshot files, we processed the snapshots using the Amazon EMR framework and visualized the results taking advantage of CPU computing on Cannon.
 
-<font color='red'>picture for overall workflow</font>
+![Project workflow](images/image2.jpg)
 
 Specifically, we took the following steps:
 
@@ -57,7 +57,7 @@ We used the Illustris TNG dataset, which is stored on Cannon as /n/hernquistfs3/
 
 Below is a simple schematic demonstrating the file and data organization:
 
-<font color='red'>flowchart of data structure</font>
+<img src="./images/image3.jpg" width="230" height="300">
 
 Data for each box is stored under a subdirectory called Runs. The directory name for the boxes is an alphanumeric string that takes the form of L_n_TNG, where
 
@@ -184,7 +184,7 @@ Strong scaling speedup is tested using 20 snapshots
 
 Weak scaling speedup is tested using 10 to 80 snapshots
 
-<font color='red'>four speedup figures</font>
+![Performance with strong and weak scaling](images/image4.jpg)
 
 ### Overheads
 * I/O overhead: we have a massive amount of data splitting each snapshot into multiple files. This issue was addressed by uploading low-resolution snapshots into AWS S3 buckets.
