@@ -40,7 +40,7 @@ Data for each box is stored under a subdirectory called Runs. The directory name
 * L is box size
 * N is number of particles/resolution cubed
 
-(so a directory with the name L205n1250TNG means that the box size is 205 Mpc with 1,250 particles3)
+_(so a directory with the name `L205n1250TNG` means that the box size is 205 Mpc with 1,250 particles<sup>3</sup>)_
 
 Within each box’s directory, the snapshot hdf5 files are stored in their respective snapshot directories starting with snapdir. Each file contains two layers in hierarchical order:
 
