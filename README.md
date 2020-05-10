@@ -79,7 +79,7 @@ Specifically, we took the following steps:
 
 5. Post-process for visualization using OpenMP implemented in Python through [`pymp`](https://github.com/classner/pymp). <font color='red'>Particles mass distribution</font>
 
-6. Create movie for simulation using FuncAnimation from matplotlib.
+6. Create movie for simulation using `FuncAnimation` from `matplotlib`.
 
 The source code for our project can be found [here](../master/src).
 
