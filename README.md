@@ -172,7 +172,7 @@ When spinning up an EMR cluster, in the advanced section, there is a section for
 There are 2 ways to run the jobs:
 * From the terminal (recommended for testing and playing with the dataset):
   * Spinning up an empty Spark cluster on EMR, using either `awscli` or from AWS Management Console
-  * `scp` the 2 files to the cluster, and r
+  * `scp` the 2 files to the cluster
   * Execute the following command
    ```
    spark-submit --master yarn --total-executor-cores 10 --conf SPARK_ACCESS_KEY=<your aws access key> --conf SPARK_SECRET_KEY=<your aws secret key> <script-file>
@@ -203,6 +203,8 @@ The code use `pymp` and `s3fs` modules, which can be installed using commands. `
 pip install --user s3fs
 pip install --user pymp-pypi
 ```
+
+The scripts to make the videos are in the `src` folders. To make the video, download the results from the spark steps to the local directories. Modify `make_movie_tng100_2.py` to read from the correct files, and run `python3 make_movie_tng100_2.py`
 
 ### Speedup and Scaling
 
