@@ -57,7 +57,7 @@ We used the Illustris TNG dataset, which is stored on Cannon as /n/hernquistfs3/
 
 Below is a simple schematic demonstrating the file and data organization:
 
-<img src="./images/image3.jpg" width="230" height="300">
+<img src="./images/image3.jpg" width="230" height="300"> ![](./images/image4.jpg)
 
 Data for each box is stored under a subdirectory called Runs. The directory name for the boxes is an alphanumeric string that takes the form of L_n_TNG, where
 
@@ -184,7 +184,7 @@ Strong scaling speedup is tested using 20 snapshots
 
 Weak scaling speedup is tested using 10 to 80 snapshots
 
-![Performance with strong and weak scaling](images/image4.jpg)
+![Performance with strong and weak scaling](images/image5.jpg)
 
 ### Overheads
 * I/O overhead: we have a massive amount of data splitting each snapshot into multiple files. This issue was addressed by uploading low-resolution snapshots into AWS S3 buckets.
