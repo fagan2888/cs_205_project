@@ -116,7 +116,7 @@ In <font color='red'>both files (?)</font>, there is a line `snaps = range(0, 43
 Now we can either run the job by:
 
 * Spinning up an EMR cluster, recommended to use 4-6 core nodes of m5.xlarge instances
-* `scp` the 2 files to the cluster, and run spark-submit --master yarn --total-executor-cores 10 --conf SPARK_ACCESS_KEY=<your aws access key> --conf SPARK_SECRET_KEY=<your aws secret key> <script-file>
+* `scp` the 2 files to the cluster, and run `spark-submit --master yarn --total-executor-cores 10 --conf SPARK_ACCESS_KEY=<your aws access key> --conf SPARK_SECRET_KEY=<your aws secret key> <script-file>`
 
 The script file can be either `fetch_gas_mid_reso_aws.py` or `fetch_gas_mid_reso_aws.py`.
 
