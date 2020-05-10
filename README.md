@@ -235,6 +235,14 @@ For strong scaling:
 * Communication overhead: introduced through the mapping of gas cells to particleIDs. We were able to mitigate this overhead through parallel processing in Spark.
 * Synchronization overhead: mostly in the post-processing phase. This was resolved with shared-memory computing with OpenMP.
 
+### Challenges
+
+* All of our dataset is stored on s3, but there is no support for running Spark on Cannon
+* Queue times made developing Spark job on Cannon take too long, and so we could not implement our framework on the highest resolution runs. We eventually decided to migrate \~1 TB of data to S3 and use EMR.
+* The `hdf5` file format is not optimal for cloud storage.
+* We had originally wanted to output all of the properties of interest at once. However, since not all particle types contain these properties, this existing structure would introduce very complex loops that would make the Spark execution difficult. In the end, our most important properties were simply the coordinates, the masses, and the densities, so we called them separately instead. 
+* For the highest resolution run, the subbox contained a total of 11.2 TB of data, which was too much to upload to S3 (would run through our credits). While the data is on Cannon, we were not able to set up a Spark cluster on Cannon due to technical difficulties and long queue times.
+  
 ### Advanced
 
 These are the experiments we did that was outside the scope of the class. Even though this is not required to create the simulation, we would want to document them here for other teams that may need
@@ -277,19 +285,12 @@ for cur_node in `cat $NODEFILE`; do
 done
 
 sleep 30
-spark-submit --master $MASTER --deploy-mode client --num-executors 8
+spark-submit --master $MASTER --deploy-mode client --num-executors 8 <spark-script>
 ```
+We can submit the spark job using `sbatch slurm.sh`
 
 #### HDF5 connector
 `hdf5` is not optimal for usage on cloud storage. We can still read hdf5 file from s3, using `h5py.File(s3.open('<file>.hdf5'))`. However, this command will attempt to load the entire binary to memory and may cause memory overflow. To set up HDF5 connector to work with s3, follow the tutorial in [HDF5 Connector Tutorial](https://www.hdfgroup.org/solutions/enterprise-support/cloud-amazon-s3-storage-hdf5-connector/)
-
-### Challenges
-
-* All of our dataset is stored on s3, but there is no support for running Spark on Cannon
-* Queue times made developing Spark job on Cannon take too long, and so we could not implement our framework on the highest resolution runs. We eventually decided to migrate \~1 TB of data to S3 and use EMR.
-* The `hdf5` file format is not optimal for cloud storage.
-* We had originally wanted to output all of the properties of interest at once. However, since not all particle types contain these properties, this existing structure would introduce very complex loops that would make the Spark execution difficult. In the end, our most important properties were simply the coordinates, the masses, and the densities, so we called them separately instead. 
-* For the highest resolution run, the subbox contained a total of 11.2 TB of data, which was too much to upload to S3 (would run through our credits). While the data is on Cannon, we were not able to set up a Spark cluster on Cannon due to technical difficulties and long queue times.
 
 ### Closing Remarks
 
