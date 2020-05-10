@@ -109,7 +109,7 @@ We used 3 Spark jobs:
 
 ### Tutorial for Code
 
-To run the Spark jobs, check out the repository at https://github.com/jenliketen/cs_205_project/spark
+To run the Spark jobs, check out the repository [here](https://github.com/jenliketen/cs_205_project).
 
 In <font color='red'>both files (?)</font>, there is a line `snaps = range(0, 4380)` that controls how many snapshots we want to run. To run on a smaller set of data, modify it to ```snaps = range(4375, 4380)```.
 
