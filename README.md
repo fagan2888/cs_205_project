@@ -107,6 +107,7 @@ Our application uses a hybrid programming model consisting of Spark and OpenMP t
 |Number of worker instances| 6 |
 |Release label| emr-5.29.0 |
 | Spark |2.4.4|
+
 ##### Machine spec
 
 |   Specs        |   Value                |
@@ -121,6 +122,7 @@ Our application uses a hybrid programming model consisting of Spark and OpenMP t
 #### OpenMP (on Cannon)
 
 ##### Machine spec
+
 |   Specs        |   Value                |
 |----------------|------------------------|
 |Instance type   | AWS m5.xlarge instance |
@@ -133,7 +135,6 @@ Our application uses a hybrid programming model consisting of Spark and OpenMP t
 We mostly use built-in modules of Cannon, and the version is already mentioned in the **Tutorial for Code** section. We only install 2 extra dependencies `h5py` and `pymp`
 * s3fs: 0.4.2
 * pymp: 0.4.2 (yes, they have the same version, it's not a typo)
-
 
 ### Software Design
 
@@ -230,12 +231,56 @@ For strong scaling:
 * Communication overhead: introduced through the mapping of gas cells to particleIDs. We were able to mitigate this overhead through parallel processing in Spark.
 * Synchronization overhead: mostly in the post-processing phase. This was resolved with shared-memory computing with OpenMP.
 
-### Advanced Data Structures
+### Advanced
 
-We used the `hdf5 file` format, which is highly hierarchical and not simply lines in a file. The `hdf5` format works great with our data; however, it poses its own challenges as well (see below).
+These are the experiments we did that was outside the scope of the class. Even though this is not required to create the simulation, we would want to document them here for other teams that may need
+
+#### Submit spark job on Slurm
+
+Spark is not one of the built-in module for Harvard Slurm. We figure out a workaround following the steps:
+* Download Spark installation tarball file to the login node of Cannon
+* Create `slurm.sh` with the following content
+```bash
+#!/bin/bash
+#
+#SBATCH -p shared # partition (queue)
+#SBATCH -N 6 # number of nodes
+#SBATCH -n 10 # number of cores
+#SBATCH -t 0-2:00 # time (D-HH:MM)
+#SBATCH -o spark-%j.out # STDOUT
+#SBATCH -e spark-%j.err # STDERR
+#SBATCH --mem=8G
+
+module load Anaconda/5.0.1-fasrc02
+
+export JAVA_HOME=$HOME/java/jdk1.8.0_241
+export SPARK_HOME=$HOME/spark/spark-2.4.5-bin-hadoop2.7/
+export MASTER=spark://$HOSTNAME.rc.fas.harvard.edu:7077
+export URL=rc.fas.harvard.edu
+NODEFILE=nodefile.txt
+
+echo $SLURM_NODELIST | tr -d 'holy7c' | tr -d [ | tr -d ] \
+    | perl -pe 's/(\d+)-(\d+)/join(",",$1..$2)/eg' \
+    | awk 'BEGIN { RS=","} { print "holy7c"$1}' > $NODEFILE
+
+source "$SPARK_HOME/sbin/start-master.sh"
+source "$SPARK_HOME/sbin/start-slave.sh" $MASTER
+
+for cur_node in `cat $NODEFILE`; do
+  echo $cur_node
+  /usr/bin/ssh $cur_node.$URL "nohup $SPARK_HOME/sbin/start-slave.sh $MASTER" &
+done
+
+sleep 30
+spark-submit --master $MASTER --deploy-mode client --num-executors 8
+```
+
+#### HDF5 connector
+`hdf5` is not optimal for usage on cloud storage. We can still read hdf5 file from s3, using `h5py.File(s3.open('<file>.hdf5'))`. However, this command will attempt to load the entire binary to memory and may cause memory overflow. To set up HDF5 connector to work with s3, follow the tutorial in [HDF5 Connector Tutorial](https://www.hdfgroup.org/solutions/enterprise-support/cloud-amazon-s3-storage-hdf5-connector/)
 
 ### Challenges
 
+* All of our dataset is stored on s3, but there is no support for running Spark on Cannon
 * Queue times made developing Spark job on Cannon take too long, and so we could not implement our framework on the highest resolution runs. We eventually decided to migrate \~1 TB of data to S3 and use EMR.
 * The `hdf5` file format is not optimal for cloud storage.
 * We had originally wanted to output all of the properties of interest at once. However, since not all particle types contain these properties, this existing structure would introduce very complex loops that would make the Spark execution difficult. In the end, our most important properties were simply the coordinates, the masses, and the densities, so we called them separately instead. 
