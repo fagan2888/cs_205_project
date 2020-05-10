@@ -195,8 +195,7 @@ We used the `hdf5 file` format, which is highly hierarchical and not simply line
 
 ### Challenges
 
-* Queue times made developing Spark job on Cannon take too long, and so we could not implement our framework on the highest resolution runs.
-    * We eventually decided to migrate ~1 TB of data to S3 and use EMR.
+* Queue times made developing Spark job on Cannon take too long, and so we could not implement our framework on the highest resolution runs. We eventually decided to migrate ~1 TB of data to S3 and use EMR.
 * The `hdf5` file format is not optimal for cloud storage.
 * We had originally wanted to output all of the properties of interest at once. However, since not all particle types contain these properties, this existing structure would introduce very complex loops that would make the Spark execution difficult. In the end, our most important properties were simply the coordinates, the masses, and the densities, so we called them separately instead. 
 * For the highest resolution run, the subbox contained a total of 11.2 TB of data, which was too much to upload to S3 (would run through our credits). While the data is on Cannon, we were not able to set up a Spark cluster on Cannon due to technical difficulties and long queue times.
