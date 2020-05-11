@@ -149,7 +149,7 @@ We mostly use built-in modules of Cannon, and the version is already mentioned i
 
 Our spark job can be split into multiple smaller spark jobs:
 
-* The first job retrieves the coordinates, masses, and size of the gas particles. Most of the information is already in the data set, and we only need to calculate the size of the particle, which we set to \\[\left(\frac{mass}{density}\right)^{\frac{1}{3}}\\]. This job can be done using the following map:
+* The first job retrieves the coordinates, masses, and size of the gas particles. Most of the information is already in the data set, and we only need to calculate the size of the particle, which we set to `(mass/density)^(1/3)`. This job can be done using the following map:
   
   ```python
   data = h5py.File(file)
@@ -194,28 +194,28 @@ Our spark job can be split into multiple smaller spark jobs:
     return blackhole_ID, tracer_list
   ```
   The first loop gets the id of the blackhole with the greatest mass, while the second loop finds all the tracer ids corresponding to this blackhole.
-* The third job gets the first snapshot when the tracer falls into the blackhole. This is done by first creating a map from tracer id to snapshot number if the tracer maps to the blackhole of choice, and then in the reduce step, we return the smaller value.
+* The third job gets the first snapshot when the tracer falls into the blackhole. This is done by first creating a map from tracer id to snapshot number if the tracer maps to the blackhole of choice, and then in the reduce step, we return the smallest value for each key.
 * To last job fetches the masses, coordinates and size of the tracer particle, this is done similar to the first job.
 
-Since the last 3 jobs depend on the result of each other, we split our spark jobs into 2 scripts, one to run the first job and one to run the remaining jobs, this help us speed-up the running time of our Spark routine.
+Since the last 3 jobs depend on the results of each other, we split our spark jobs into 2 scripts, one to run the first job and one to run the remaining jobs, this help us speed-up the running time of our Spark routine.
 
 #### OpenMP
 We use native openMP to calculate the bin and smoothing information for 1 snapshot, and use `pymp` to parallelize the binning and smoothing for each snapshot.
 
 ### Tutorial for Code
 
-There are 2 phases in our project, the first phase involves collecting gas data from TNG dataset and the second phase for binning and smoothing, which uses OpenMP. Since our dataset is stored in S3, make sure you have an access key and secret key pair of an IAM user that have read access to s3. You can create a new user on AWS Management Console directly following the steps here [AWS User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html). 
+There are 2 phases in our application: the first phase collects gas data from the TNG dataset, the second phase performs binning and smoothing for these particles, and uses OpenMP. Since our dataset is stored in S3, you need to have an access key and secret key pair of an IAM user that have read access to s3. You can create a new user on AWS Management Console directly following the steps here [AWS User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html). 
 
 #### Tutorial for running Spark job
 There are 2 main scripts to collect the data:
 * `fetch_gas_mid_reso_aws.py`: collects information about gas particle, the fields of interest are coordinates, masses, and densities
 * `fetch_tracer_mid_reso_aws.py`: collects information about tracer particles. 
 
-**These 2 files, by default, will attempt to read through the entire dataset of TNG, which is about 800GB and it will take a while to run**. In order to run the code on a smaller subset of data, in both files, find a line `snaps = range(0, 4380)`. This line controls the number of snapshots that we want to collect data. To analyze a smaller dataset, simply modify it to ```snaps = range(4375, 4380)```. There are 4380 snapshots in total, and `snaps` can be any interval in the range `[0, 4380]`.
+**These 2 files, by default, will attempt to read through the entire dataset of TNG, which is about 800GB and it will take a while to run**. In order to run the code on a smaller subset of data, in both files, find a line `snaps = range(0, 4380)`. This line controls the number of snapshots from which we want to collect data. To analyze a smaller dataset, simply modify it to ```snaps = range(4375, 4380)```. There are 4380 snapshots in total, and `snaps` can be any interval in the range `[0, 4380]`.
 
-Furthermore, the 2 scripts default to save data to `s3://spark-namluu-output`, modify this line to save to the destination bucket of your choice. **These output files will be used for the binning and smoothing process.**
+These 2 scripts also save the data to `s3://spark-namluu-output` by default, modify this line in each file to save the output to the destination bucket of your choice. **These output files will be used for the binning and smoothing process.**
 
-The 2 scripts use 2 dependencies `h5py` and `s3fs`, so in order to run the scripts in emr, we have to install the modules on every node in the clusters. This can be done by creating a bootstrap script like this
+The 2 scripts use 2 dependencies `h5py` and `s3fs`, so in order to run the scripts in emr, we have to install the modules on every node in the clusters. This can be done by creating a bootstrap script similar to this.
 
 ```bash
 #!/bin/bash
@@ -223,7 +223,7 @@ sudo pip install h5py
 sudo pip install s3fs
 ```
 
-When spinning up an EMR cluster, in the advanced section, there is a section for selecting bootrap action in **Step 3: General Cluster Setting**. Select *Custom run* and point to the boothstrap script.
+When spinning up an EMR cluster, in the advanced options, there is a section for selecting bootrap action in **Step 3: General Cluster Setting**. Select *Custom run* and point to the boothstrap script.
 
 There are 2 ways to run the jobs:
 * From the terminal (recommended for testing and playing with the dataset):
@@ -250,7 +250,7 @@ There are 2 ways to run the jobs:
     --conf SPARK_ACCESS_KEY=<access_key> 
     --conf SPARK_SECRET_KEY=<secret_key>
     ```
-  * The rest can be left as default, run the cluster
+  * The remaining options can be left as default
 
 #### Tutorial for running OpenMP section
 This tutorial assumes the OpenMP code will be ran on Cannon, though it should work with any machine having OpenMP and all the dependencies installed.
@@ -267,27 +267,26 @@ pip install --user pymp-pypi
 ```
 
 The scripts to make the videos are in the `src` folders. To make the video
-* Download the results from the spark steps to the local directories. 
+* Download the results from the spark steps to a local directory.
 * Modify `make_movie_tng100_2.py` to read from the correct files
 * Run `compile.sh` to compile the c file
 * Run `python3 make_movie_tng100_2.py`
 
 ### Speedup and Scaling
 
-For speed-up and performance testing, we use a test dataset which is about % data of TNG100-2 subbox1, which is about 8GB. Since our application contains 2 phase, one for collecting gas particles' information using Spark and one for movie making in OpenMP, we did 2 performance testing. We calculate the speed-up and the result is showed below:
+For speed-up and performance testing, we use a test dataset which is about 1% data of TNG100-2 subbox1, and is about 8GB. Since our application contains 2 phase, one for collecting gas particles' information using Spark and one for movie making in OpenMP, we did 2 performance testing. We calculate the speed-up and the result is showed below:
 
 ![Performance with strong and weak scaling](./images/image5.jpg)
 
-#### Comments
 For OpenMP, since our code is parallelized to the loop level to be able to work with each snapshot independently, and this explains the curve of the weak scaling graph.
 
 For strong scaling:
-* OpenMP: we detects that the performance decreases a after we use more than 12 threads, which is a bit surprising since the machine being tested on have 16 CPU with 8 core/CPU. We think that the synchronization and communication overhead starts becoming a bottleneck and it overshadows the effect of parallelization. 
-* Spark: the performance after 8 executors is negligient, in the final iteration of the dataset, we decided to use 10 executors on a 6 machine-cluster.
+* OpenMP: we detects that the performance starts to decrease after we use more than 12 threads, which is a bit surprising since the machine being tested on have 16 CPU with 8 core/CPU. We think that the synchronization and communication overhead starts becoming a bottleneck and it overshadows the effect of parallelization. 
+* Spark: the performance increase after 8 executors is negligient, in the final iteration, we decided to use 10 executors on a 6 machine-cluster to analyze the entire dataset.
   
 ### Overheads
 
-* I/O overhead: we have a massive amount of data splitting each snapshot into multiple files. This issue was addressed by uploading low-resolution snapshots into AWS S3 buckets.
+* I/O overhead: we have a massive amount of data splitting each snapshot into multiple files. This issue was addressed by uploading medium-resolution snapshots into AWS S3 buckets.
 * Communication overhead: introduced through the mapping of gas cells to particleIDs. We were able to mitigate this overhead through parallel processing in Spark.
 * Synchronization overhead: mostly in the post-processing phase. This was resolved with shared-memory computing with OpenMP.
 
@@ -307,6 +306,8 @@ These are the experiments we did that was outside the scope of the class. Even t
 
 Spark is not one of the built-in module for Harvard Slurm. We figure out a workaround following the steps:
 * Download Spark installation tarball file to the login node of Cannon
+* Install `Java8` using `module load`
+* To use s3, we also need `aws-java-sdk`, which can be downloaded here [aws-java-sdk](https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk). Spark only works with `aws-java-sdk-1.7.*`
 * Create `slurm.sh` with the following content
   
 ```bash
@@ -343,10 +344,10 @@ done
 sleep 30
 spark-submit --master $MASTER --deploy-mode client --num-executors 8 <spark-script>
 ```
-We can submit the spark job using `sbatch slurm.sh`
+* Submit the spark job using `sbatch slurm.sh`
 
 #### HDF5 connector
-`hdf5` is not optimal for usage on cloud storage. We can still read hdf5 file from s3, using `h5py.File(s3.open('<file>.hdf5'))`. However, this command will attempt to load the entire binary to memory and may cause memory overflow. To set up HDF5 connector to work with s3, follow the tutorial in [HDF5 Connector Tutorial](https://www.hdfgroup.org/solutions/enterprise-support/cloud-amazon-s3-storage-hdf5-connector/)
+`hdf5` is not optimal for cloud storage. We can still read hdf5 file from s3, using `h5py.File(s3.open('<file>.hdf5'))`. However, this command will attempt to load the entire file to memory and may cause memory overflow. To set up HDF5 connector to work with s3, follow the tutorial in [HDF5 Connector Tutorial](https://www.hdfgroup.org/solutions/enterprise-support/cloud-amazon-s3-storage-hdf5-connector/)
 
 ### Closing Remarks
 
