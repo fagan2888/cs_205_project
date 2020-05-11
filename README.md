@@ -99,8 +99,11 @@ Our application uses a hybrid programming model consisting of Spark and OpenMP t
 ### Platform and Infrastructure
 
 * Storage: AWS S3
-* Data collecting: Spark
-* Binning, smoothing and video making: OpenMP
+  * We store the data in an s3 bucket called `spark-illustris-tng`
+* For data collecting, we use Spark on EMR
+* For binning, smoothing and video making: we use OpenMP on Cannon
+
+Below is the specs of the machines that we use:
 
 #### Spark cluster
 
@@ -142,11 +145,62 @@ We mostly use built-in modules of Cannon, and the version is already mentioned i
 
 ### Software Design
 
-We used 3 Spark jobs:
+#### Spark
 
-* To get the gas information
-* To get the tracer last snapshot before they fall into blackhole
-* To get tracer information
+Our spark job can be split into multiple smaller spark jobs:
+
+* The first job retrieves the coordinates, masses, and size of the gas particles. Most of the information is already in the data set, and we only need to calculate the size of the particle, which we set to \\[\left(\frac{mass}{density}\right)^{\frac{1}{3}}\\]. This job can be done using the following map:
+  
+  ```python
+  data = h5py.File(file)
+  lambda data: return (data['Coordinates'], data['Masses'], np.pow(data['Coordinates']/data['Density'], 1/3))
+  ```
+
+* The second job gets all the tracer ids that correspond with the black hole of our choice in the last snapshot. This is done using the code snippet
+  
+  ```python
+  def gen_tracer_ids_blackhole(file_list, position, radius):
+    maxmass=0
+    blackhole_ID = -1
+    for fname in file_list:
+        dat = open_h5(fname)
+        if 'PartType5' not in dat.keys():
+            continue
+        pos = np.array(dat['PartType5']['Coordinates'])
+        pos = np.subtract(pos, position)
+
+        keys = np.where(np.linalg.norm(pos, axis=1) < radius)[0]
+        if len(keys) > 0:
+            masses = dat['PartType5']['Masses'][keys]
+            subkey = np.argmax(masses)
+
+            if masses[subkey] > maxmass:
+                maxmass = masses[subkey]
+                blackhole_ID = dat['PartType5']['ParticleIDs'][keys[subkey]]
+
+    assert blackhole_ID > 0
+
+    tracer_list = np.array([], dtype=np.uint64)
+    parent_list = np.array([], dtype=np.uint64)
+    for fname in file_list:
+        dat = open_h5(fname)
+
+        if 'PartType3' not in dat.keys():
+            continue
+        keys = np.where(np.isin(dat['PartType3']['ParentID'], blackhole_ID))[0]
+        
+        tracer_list = np.concatenate((tracer_list, dat['PartType3']['TracerID'][keys]))
+
+    return blackhole_ID, tracer_list
+  ```
+  The first loop gets the id of the blackhole with the greatest mass, while the second loop finds all the tracer ids corresponding to this blackhole.
+* The third job gets the first snapshot when the tracer falls into the blackhole. This is done by first creating a map from tracer id to snapshot number if the tracer maps to the blackhole of choice, and then in the reduce step, we return the smaller value.
+* To last job fetches the masses, coordinates and size of the tracer particle, this is done similar to the first job.
+
+Since the last 3 jobs depend on the result of each other, we split our spark jobs into 2 scripts, one to run the first job and one to run the remaining jobs, this help us speed-up the running time of our Spark routine.
+
+#### OpenMP
+We use native openMP to calculate the bin and smoothing information for 1 snapshot, and use `pymp` to parallelize the binning and smoothing for each snapshot.
 
 ### Tutorial for Code
 
@@ -161,12 +215,14 @@ There are 2 main scripts to collect the data:
 
 Furthermore, the 2 scripts default to save data to `s3://spark-namluu-output`, modify this line to save to the destination bucket of your choice. **These output files will be used for the binning and smoothing process.**
 
-The 2 scripts use 2 dependencies `h5py` and `s3fs`, so in order to run the scripts in emr, we have to install the modules on every node in the clusters. This can be done by
-* Creating a bootstrap script with the following command
+The 2 scripts use 2 dependencies `h5py` and `s3fs`, so in order to run the scripts in emr, we have to install the modules on every node in the clusters. This can be done by creating a bootstrap script like this
+
 ```bash
+#!/bin/bash
 sudo pip install h5py
 sudo pip install s3fs
 ```
+
 When spinning up an EMR cluster, in the advanced section, there is a section for selecting bootrap action in **Step 3: General Cluster Setting**. Select *Custom run* and point to the boothstrap script.
 
 There are 2 ways to run the jobs:
@@ -175,7 +231,11 @@ There are 2 ways to run the jobs:
   * `scp` the 2 files to the cluster
   * Execute the following command
    ```
-   spark-submit --master yarn --total-executor-cores 10 --conf SPARK_ACCESS_KEY=<your aws access key> --conf SPARK_SECRET_KEY=<your aws secret key> <script-file>
+   spark-submit --master yarn \
+                --total-executor-cores 10 \
+                --conf SPARK_ACCESS_KEY=<your aws access key> 
+                --conf SPARK_SECRET_KEY=<your aws secret key> 
+                <script-file>
    ```
    where `<script-file>` can be either `fetch_gas_mid_reso_aws.py` or `fetch_gas_mid_reso_aws.py`.
 * From AWS Management Console (recommended for the full run of the entire dataset):
@@ -186,7 +246,9 @@ There are 2 ways to run the jobs:
     * For the **Application location**, select one of the scripts on s3
     * For **Spark-submit options**, use the following
     ```
-    --total-executor-cores 10 --conf SPARK_ACCESS_KEY=<access_key> --conf SPARK_SECRET_KEY=<secret_key>
+    --total-executor-cores 10 
+    --conf SPARK_ACCESS_KEY=<access_key> 
+    --conf SPARK_SECRET_KEY=<secret_key>
     ```
   * The rest can be left as default, run the cluster
 
@@ -198,29 +260,21 @@ module load Anaconda3/5.0.1-fasrc02
 module load python/3.6.3-fasrc02
 module load ffmpeg/4.0.2-fasrc01
 ```
-The code use `pymp` and `s3fs` modules, which can be installed using commands. `h5py` should already be included in the `Anaconda` module.
+The code use `pymp` and `s3fs` modules, which can be installed using commands.
 ```
 pip install --user s3fs
 pip install --user pymp-pypi
 ```
 
-The scripts to make the videos are in the `src` folders. To make the video, download the results from the spark steps to the local directories. Modify `make_movie_tng100_2.py` to read from the correct files, and run `python3 make_movie_tng100_2.py`
+The scripts to make the videos are in the `src` folders. To make the video
+* Download the results from the spark steps to the local directories. 
+* Modify `make_movie_tng100_2.py` to read from the correct files
+* Run `compile.sh` to compile the c file
+* Run `python3 make_movie_tng100_2.py`
 
 ### Speedup and Scaling
 
-We use 2 dataset, TNG100-3-subbox1, which contains the data of the lowest resolution run (53GB), and TNG100-2-subbox1, which contains the data of the mid resolution run (800GB)
-
-For TNG100-3:
-
-* Collecting data serially takes 21 minutes.
-* Collecting data using a cluster of 6 worker nodes take 5.4 minutes.
-
-For TNG100-2:
-
-* Collecting data for tracer takes 1 hour 50 minutes
-* Collecting data for particles takes take ~ 2 hours
-
-For speed-up and performance testing, we use 1% data of TNG100-2 subbox1, which is about 8GB. Since our application contains 2 phase, one for collecting gas particles' information using Spark and one for movie making in OpenMP, we did 2 performance testing. We calculate the speed-up and the result is showed below:
+For speed-up and performance testing, we use a test dataset which is about % data of TNG100-2 subbox1, which is about 8GB. Since our application contains 2 phase, one for collecting gas particles' information using Spark and one for movie making in OpenMP, we did 2 performance testing. We calculate the speed-up and the result is showed below:
 
 ![Performance with strong and weak scaling](./images/image5.jpg)
 
